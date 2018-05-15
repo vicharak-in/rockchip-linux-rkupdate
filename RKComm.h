@@ -58,33 +58,33 @@ typedef enum
 
 typedef struct
 {
-	BYTE	ucOperCode;		
+	BYTE	ucOperCode;
 	BYTE	ucReserved;
-	DWORD	dwAddress;		
+	DWORD	dwAddress;
 	BYTE	ucReserved2;
-	USHORT	usLength;		
+	USHORT	usLength;
 	BYTE	ucReserved3[7];
 }CBWCB, *PCBWCB;
 
 typedef struct
 {
-	DWORD	dwCBWSignature;			
-	DWORD	dwCBWTag;				
-	DWORD	dwCBWTransferLength;		
-	BYTE	ucCBWFlags;				
-	BYTE	ucCBWLUN;			
-	BYTE	ucCBWCBLength;			
-	CBWCB	cbwcb;				
+	DWORD	dwCBWSignature;
+	DWORD	dwCBWTag;
+	DWORD	dwCBWTransferLength;
+	BYTE	ucCBWFlags;
+	BYTE	ucCBWLUN;
+	BYTE	ucCBWCBLength;
+	CBWCB	cbwcb;
 }CBW, *PCBW;
 
-typedef struct 
+typedef struct
 {
 	DWORD	dwCSWSignature;
 	DWORD	dwCSWTag;
 	DWORD	dwCBWDataResidue;
 	BYTE	ucCSWStatus;
 }CSW, *PCSW;
-typedef struct 
+typedef struct
 {
 	UINT	uiSize;
 	UINT	uiCrc;
@@ -97,7 +97,8 @@ typedef struct
 #define NAND_DRIVER_DEV_LBA "/dev/block/rknand_rknand"
 #define EMMC_DRIVER_DEV "/dev/rknand_sys_storage"
 #define EMMC_DRIVER_DEV_VENDOR "/dev/vendor_storage"
-#define EMMC_DRIVER_DEV_LBA "/dev/block/mmcblk0"
+//#define EMMC_DRIVER_DEV_LBA "/dev/block/mmcblk0"
+#define EMMC_DRIVER_DEV_LBA "/dev/mmcblk0"
 
 #define READ_SECTOR_IO       	_IOW('r', READ_SECTOR, unsigned int)
 #define WRITE_SECTOR_IO       	_IOW('r', WRITE_SECTOR, unsigned int)
@@ -122,9 +123,9 @@ typedef struct
 #define CSW_SIGN			0x53425355	/* "USBS" */
 
 
-#define DIRECTION_OUT		0x00	
-#define DIRECTION_IN		0x80	
-#define MAX_TEST_BLOCKS		512		
+#define DIRECTION_OUT		0x00
+#define DIRECTION_IN		0x80
+#define MAX_TEST_BLOCKS		512
 #define MAX_ERASE_BLOCKS	128
 #define  MAX_CLEAR_LEN	16*1024
 
@@ -153,10 +154,10 @@ class CRKComm
 {
 public:
 	virtual int RKU_EraseBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE ucEraseType)=0;
-	virtual int RKU_ReadChipInfo(BYTE* lpBuffer)=0;	
+	virtual int RKU_ReadChipInfo(BYTE* lpBuffer)=0;
 	virtual int RKU_ReadFlashID(BYTE* lpBuffer)=0;
 	virtual int RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead=NULL)=0;
-	virtual int RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode=RWMETHOD_IMAGE)=0;				
+	virtual int RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode=RWMETHOD_IMAGE)=0;
 	virtual int RKU_ReadSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)=0;
 	virtual int RKU_ResetDevice(BYTE bySubCode=RST_NONE_SUBCODE)=0;
 	virtual int RKU_TestBadBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)=0;
@@ -176,7 +177,7 @@ protected:
 	int m_hDev;
 	int m_hLbaDev;
 private:
-	
+
 };
 class CRKUsbComm: public CRKComm
 {
@@ -199,13 +200,14 @@ public:
 	virtual int RKU_ShowNandLBADevice();
 	CRKUsbComm(CRKLog *pLog);
 	~CRKUsbComm();
-	
+
 protected:
-	
+	STRUCT_RKDEVICE_DESC m_deviceDesc;
+	CRKLog *m_log;
 private:
 	bool CtrlNandLbaWrite(bool bEnable=true);
 	bool CtrlNandLbaRead(bool bEnable=true);
- 
+
 };
 
 #endif

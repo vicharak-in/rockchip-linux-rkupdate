@@ -1,8 +1,9 @@
 #ifndef RKANDROIDDEVICE_HEADER
 #define RKANDROIDDEVICE_HEADER
 #include "RKDevice.h"
+#include "gpt.h"
 #pragma pack(1)
-typedef	struct 
+typedef	struct
 {
 	DWORD	dwTag;
 	BYTE	reserved[4];
@@ -15,13 +16,13 @@ typedef	struct
 	USHORT	usCrc;
 }RKANDROID_IDB_SEC0,*PRKANDROID_IDB_SEC0;
 
-typedef struct 
+typedef struct
 {
-	USHORT  usSysReservedBlock;                 
-	USHORT  usDisk0Size;				
-	USHORT  usDisk1Size;			
-	USHORT  usDisk2Size;				
-	USHORT  usDisk3Size;					
+	USHORT  usSysReservedBlock;
+	USHORT  usDisk0Size;
+	USHORT  usDisk1Size;
+	USHORT  usDisk2Size;
+	USHORT  usDisk3Size;
 	UINT	uiChipTag;
 	UINT	uiMachineId;
 	USHORT	usLoaderYear;
@@ -53,7 +54,7 @@ typedef struct
 
 typedef struct
 {
-	USHORT  usInfoSize;                        
+	USHORT  usInfoSize;
 	BYTE    bChipInfo[CHIPINFO_LEN];
 	BYTE    reserved[RKANDROID_SEC2_RESERVED_LEN];
 	char    szVcTag[3];
@@ -68,7 +69,7 @@ typedef struct
 
 typedef struct
 {
-    	USHORT  usSNSize;                        
+    	USHORT  usSNSize;
     	BYTE    sn[RKDEVICE_SN_LEN];
 	BYTE    reserved[RKANDROID_SEC3_RESERVED_LEN];
 	BYTE	imeiSize;
@@ -80,7 +81,7 @@ typedef struct
 	BYTE	macSize;
 	BYTE	macAddr[RKDEVICE_MAC_LEN];
 }RKANDROID_IDB_SEC3,*PRKANDROID_IDB_SEC3;
-typedef struct  
+typedef struct
 {
 	DWORD  dwTag;
 	USHORT usSnSize;
@@ -124,7 +125,7 @@ const BYTE Wipe_All[]={0x72,0x65,0x63,0x6F,0x76,0x65,
 #define MAX_MACHINE_MODEL		34
 #define RELATIVE_PATH			60
 #define PART_NAME				32
-typedef struct 
+typedef struct
 {
 	char name[PART_NAME];// 分区名称
 	char file[RELATIVE_PATH];// 相对路径名，提取文件时用到
@@ -191,6 +192,7 @@ private:
 	USHORT m_usFlashDataSec;
 	USHORT m_usFlashBootSec;
 	BYTE   *m_paramBuffer;
+	BYTE *m_gptBuffer;
 	UINT   m_uiParamFileSize;
 	UINT   m_uiResevedBlockSize;
 	RKANDROID_IDB_SEC0 *m_oldSec0;
@@ -203,7 +205,7 @@ private:
 	bool GetLoaderSize();
 	bool GetLoaderDataSize();
 	bool GetOldSectorData();
-	bool CalcIDBCount(); 
+	bool CalcIDBCount();
 	bool IsExistSector3Crc(PRKANDROID_IDB_SEC2 pSec);
 
 	virtual bool FindBackupBuffer();
@@ -218,17 +220,29 @@ private:
 	virtual int MakeIDBlockData(PBYTE lpIDBlock);
 	virtual bool  MakeSpareData(PBYTE lpIDBlock,DWORD dwSectorNum,PBYTE lpSpareBuffer);
 	virtual int WriteIDBlock(PBYTE lpIDBlock,DWORD dwSectorNum,bool bErase);
-
 	bool RKA_Param_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
 	bool RKA_Param_Check(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
 	bool RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
 	bool RKA_File_Check(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
-	
+	bool RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
+	bool RKA_Gpt_Check(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte);
+
 	bool GetParameterPartSize(STRUCT_RKIMAGE_ITEM &paramItem);
 	bool ParsePartitionInfo(string &strPartInfo,string &strName,UINT &uiOffset,UINT &uiLen);
 	bool MakeParamFileBuffer(STRUCT_RKIMAGE_ITEM &entry);
 	bool CheckParamPartSize(STRUCT_RKIMAGE_HDR &rkImageHead,int iParamPos);
 	bool write_partition_upgrade_flag(DWORD dwOffset,BYTE *pMd5,UINT uiFlag);
 	bool read_partition_upgrade_flag(DWORD dwOffset,BYTE *pMd5,UINT *uiFlag);
+	bool GetParameterGptFlag(STRUCT_RKIMAGE_ITEM &paramItem);
 };
+void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR &vecUuid, u64 diskSectors);
+void prepare_gpt_backup(u8 *master, u8 *backup);
+void gen_rand_uuid(unsigned char *uuid_bin);
+unsigned int crc32_le(unsigned int crc, unsigned char *p, unsigned int len);
+bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem);
+bool get_uuid_from_parameter(char *pParameter,CONFIG_ITEM_VECTOR &vecItem);
+bool ParsePartitionInfo(string &strPartInfo,string &strName,UINT &uiOffset,UINT &uiLen);
+bool ParseUuidInfo(string &strUuidInfo, string &strName, string &strUUid);
+void string_to_uuid(string strUUid, char *uuid);
+int find_uuid_item(CONFIG_ITEM_VECTOR &vecItems, char *pszName);
 #endif

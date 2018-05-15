@@ -13,13 +13,14 @@ CRKComm::~CRKComm()
 }
 
 CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
-{	
+{
 	char bootmode[100];
 	property_get("ro.bootmode", bootmode, "unknown");
 	if(!strcmp(bootmode, "emmc"))
 		m_bEmmc = true;
 	else
 		m_bEmmc = false;
+	m_bEmmc = true;
 	if (m_bEmmc)
 	{
 		if (pLog)
@@ -105,7 +106,7 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 //				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),NAND_DRIVER_DEV_LBA,m_hLbaDev);
 //		}
 	}
-	
+
 }
 void CRKUsbComm::RKU_ReopenLBAHandle()
 {
@@ -145,7 +146,7 @@ void CRKUsbComm::RKU_ReopenLBAHandle()
 				m_log->Record(_T("INFO:RKU_ReopenLBAHandle-->%s=%d"),NAND_DRIVER_DEV_LBA,m_hLbaDev);
 		}
 //	}
-	
+
 }
 int CRKUsbComm::RKU_ShowNandLBADevice()
 {
@@ -180,16 +181,16 @@ CRKUsbComm::~CRKUsbComm()
 }
 
 int CRKUsbComm::RKU_EraseBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE ucEraseType)
-{	
-	return ERR_SUCCESS;						
+{
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadChipInfo(BYTE* lpBuffer)
 {
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadFlashID(BYTE* lpBuffer)
 {
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
 {
@@ -204,7 +205,7 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
 		return ERR_FAILED;
 	}
 	*puiRead = 11;
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode)
 {
@@ -231,8 +232,8 @@ int CRKUsbComm::RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubC
 			return ERR_DEVICE_OPEN_FAILED;
 	}
 
-	if (m_bEmmc)
-		dwPos += 8192;
+	//if (m_bEmmc)
+	//	dwPos += 8192;
 
     dwPosBuf = dwPos;
 
@@ -252,7 +253,7 @@ int CRKUsbComm::RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubC
 			m_log->Record(_T("ERROR:RKU_ReadLBA read failed,err=%d"),errno);
 		return ERR_FAILED;
 	}
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
 {
@@ -270,11 +271,11 @@ int CRKUsbComm::RKU_ReadSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
 			m_log->Record(_T("ERROR:RKU_ReadSector failed,err=%d"),errno);
 		return ERR_FAILED;
 	}
-	return ERR_SUCCESS;					
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ResetDevice(BYTE bySubCode)
 {
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 
 int CRKUsbComm::RKU_TestBadBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
@@ -295,11 +296,11 @@ int CRKUsbComm::RKU_TestBadBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE* 
 		m_log->PrintBuffer(strOutput,lpBuffer,64);
 		m_log->Record(_T("INFO:BadBlockState:\r\n%s"),strOutput.c_str());
 	}
-	return ERR_SUCCESS;							
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_TestDeviceReady(DWORD *dwTotal,DWORD *dwCurrent,BYTE bySubCode)
 {
-	return ERR_DEVICE_READY;			
+	return ERR_DEVICE_READY;
 }
 int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode)
 {
@@ -326,8 +327,8 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 			return ERR_DEVICE_OPEN_FAILED;
 	}
 
-	if (m_bEmmc)
-		dwPos += 8192;
+	//if (m_bEmmc)
+	//	dwPos += 8192;
 
     dwPosBuf = dwPos;
 
@@ -338,7 +339,7 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 			m_log->Record(_T("ERROR:RKU_WriteLBA seek failed,err=%d,ret:%lld"),errno, ret);
             m_log->Record(_T("the dwPosBuf = dwPosBuf*512,dwPosBuf:%lld!"), dwPosBuf*512);
         }
-        
+
 		return ERR_FAILED;
 	}
 	ret = write(m_hLbaDev,lpBuffer,dwCount*512);
@@ -355,7 +356,7 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 //		if (m_log)
 //			m_log->Record(_T("ERROR:RKU_WriteLBA fsync failed,err=%d"),errno);
 //	}
-	return ERR_SUCCESS;					
+	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_WriteSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
 {
@@ -373,7 +374,7 @@ int CRKUsbComm::RKU_WriteSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
 			m_log->Record(_T("ERROR:RKU_WriteSector failed,err=%d"),errno);
 		return ERR_FAILED;
 	}
-	return ERR_SUCCESS;						
+	return ERR_SUCCESS;
 }
 
 int CRKUsbComm::RKU_EndWriteSector(BYTE* lpBuffer)

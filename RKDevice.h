@@ -65,7 +65,7 @@ typedef struct _STRUCT_FLASHINFO_CMD
 	BYTE	bFlashCS;		// Flash片选(若Flash片选存在，则将相应的Bit置1，否则置0)
 	BYTE	reserved[501];
 }STRUCT_FLASHINFO_CMD, *PSTRUCT_FLASHINFO_CMD;
-typedef struct  
+typedef struct
 {
 	BYTE bFlashCS;
 	UINT uiBlockNum;
@@ -83,34 +83,34 @@ typedef vector<STRUCT_DEVICE_PROP> DEVICE_PROP_SET;
 class CRKDevice
 {
 public:
-	
+
 	ENUM_OS_TYPE GetOsType();
 	void SetOsType(ENUM_OS_TYPE value);
  	property<CRKDevice,ENUM_OS_TYPE,READ_WRITE> OsType;
 
 	void SetUid(PBYTE value);
  	property<CRKDevice,PBYTE,WRITE_ONLY> Uid;
-	
+
 	void SetPrepareEraseFlag(bool value);
  	property<CRKDevice,bool,WRITE_ONLY> PrepareEraseFlag;
 
 	void SetWorkFlow(UINT value);
  	property<CRKDevice,UINT,WRITE_ONLY> WorkFlow;
-	
+
 	void SetMiscModifyFlag(ENUM_MISC_MODIFY_FLAG value);
  	property<CRKDevice,ENUM_MISC_MODIFY_FLAG,WRITE_ONLY> MiscModifyFlag;
-	
+
 	CRKLog* GetLogObjectPointer();
  	property<CRKDevice,CRKLog*,READ_ONLY> LogObjectPointer;
-	
+
 	CRKComm* GetCommObjectPointer();
  	property<CRKDevice,CRKComm*,READ_ONLY> CommObjectPointer;
-	
+
 	virtual int DownloadIDBlock()=0;
 	virtual int DownloadImage()=0;
 	virtual int PrepareIDB()=0;
 	virtual bool BufferWriteBack()=0;
-	
+
 
 	bool CheckChip();
 	bool GetFlashInfo();
@@ -155,6 +155,9 @@ protected:
 	bool m_bUidWriteOK;
 	bool  m_remallocDisk;
 	bool m_bEmmc;
+	bool GptFlag;
+	bool DirectLBA;
+	bool First4Access;
 	ENUM_MISC_MODIFY_FLAG m_emMiscModifyFlag;
 	bool m_bQuickCheckMode;
 	bool BuildBlockStateMap(BYTE bFlashCS);
@@ -171,7 +174,7 @@ protected:
 	virtual char FindAllIDB()=0;
 	virtual CHAR FindIDBlock(char pos,char &IDBlockPos)=0;
 	virtual bool ReserveIDBlock(char iBlockIndex=0,char iIdblockPos=0)=0;
-	virtual bool OffsetIDBlock(char pos)=0;		
+	virtual bool OffsetIDBlock(char pos)=0;
 	virtual bool MakeSector0(PBYTE pSector)=0;
 	virtual void MakeSector1(PBYTE pSector)=0;
 	virtual bool MakeSector2(PBYTE pSector)=0;
@@ -179,7 +182,7 @@ protected:
 	virtual int MakeIDBlockData(PBYTE lpIDBlock)=0;
 	virtual bool MakeSpareData(PBYTE lpIDBlock,DWORD dwSectorNum,PBYTE lpSpareBuffer)=0;
 	virtual int WriteIDBlock(PBYTE lpIDBlock,DWORD dwSectorNum,bool bErase)=0;
-	
+
 private:
 	ENUM_RKDEVICE_TYPE m_device;
 	ENUM_OS_TYPE m_os;

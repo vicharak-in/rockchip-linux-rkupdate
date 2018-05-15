@@ -1136,10 +1136,3 @@ EXIT_RECOVERY:
 	return bSuccess;
 	
 }
-
-
-
-int main(int argc, char *argv[]){
-	do_rk_firmware_upgrade(argv[1], NULL, NULL, NULL);	
-	return 0;
-}

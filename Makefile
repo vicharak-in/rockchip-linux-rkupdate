@@ -8,7 +8,8 @@ OBJ =   CRC.o \
 	RKDevice.o \
 	RKImage.o \
 	RKLog.o \
-	Upgrade.o
+	Upgrade.o \
+	main.o
 
 $(PROM): $(OBJ)
 	$(CXX) -o $(PROM) $(OBJ) $(CFLAGS)

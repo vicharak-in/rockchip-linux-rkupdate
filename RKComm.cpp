@@ -52,8 +52,9 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 			if (pLog)
 				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),EMMC_DRIVER_DEV_VENDOR,m_hDev);
 		}
-
-		m_hLbaDev= open(EMMC_DRIVER_DEV_LBA,O_RDWR|O_SYNC,0);
+        //get EMMC_DRIVER_DEV_LBA from
+        char *emmc_point = getenv(EMMC_POINT_NAME);
+        m_hLbaDev= open(emmc_point, O_RDWR|O_SYNC,0);
 		if (m_hLbaDev<0)
 		{
 			if (pLog)

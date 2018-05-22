@@ -99,6 +99,7 @@ typedef struct
 #define EMMC_DRIVER_DEV_VENDOR "/dev/vendor_storage"
 //#define EMMC_DRIVER_DEV_LBA "/dev/block/mmcblk0"
 #define EMMC_DRIVER_DEV_LBA "/dev/mmcblk0"
+#define EMMC_POINT_NAME "emmc_point_name"
 
 #define READ_SECTOR_IO       	_IOW('r', READ_SECTOR, unsigned int)
 #define WRITE_SECTOR_IO       	_IOW('r', WRITE_SECTOR, unsigned int)

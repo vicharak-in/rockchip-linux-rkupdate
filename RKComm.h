@@ -93,8 +93,8 @@ typedef struct
 
 #pragma pack()
 #define NAND_DRIVER_DEV "/dev/rknand_sys_storage"
-#define NAND_DRIVER_DEV_VENDOR "/dev/vendor_storage"
-#define NAND_DRIVER_DEV_LBA "/dev/block/rknand_rknand"
+#define NAND_DRIVER_DEV_VENDOR "/dev/rknand_sys_storage"
+#define NAND_DRIVER_DEV_LBA "/dev/rknand0"
 #define EMMC_DRIVER_DEV "/dev/rknand_sys_storage"
 #define EMMC_DRIVER_DEV_VENDOR "/dev/vendor_storage"
 //#define EMMC_DRIVER_DEV_LBA "/dev/block/mmcblk0"

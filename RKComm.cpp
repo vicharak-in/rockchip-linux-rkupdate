@@ -14,13 +14,25 @@ CRKComm::~CRKComm()
 
 CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 {
-	char bootmode[100];
-	property_get("ro.bootmode", bootmode, "unknown");
-	if(!strcmp(bootmode, "emmc"))
-		m_bEmmc = true;
-	else
-		m_bEmmc = false;
-	m_bEmmc = true;
+	//char bootmode[100];
+	//property_get("ro.bootmode", bootmode, "unknown");
+	//if(!strcmp(bootmode, "emmc"))
+	//	m_bEmmc = true;
+	//else
+	//	m_bEmmc = false;
+    char *emmc_point = getenv(EMMC_POINT_NAME);
+    m_hLbaDev = open(emmc_point, O_RDWR|O_SYNC,0);
+    if (m_hLbaDev<0){
+        if (pLog)
+            pLog->Record(_T("INFO:is nand devices..."));
+        m_bEmmc = false;
+    }else{
+        if (pLog)
+            pLog->Record(_T("INFO:is emmc devices..."));
+        m_bEmmc = true;
+        close(m_hLbaDev);
+    }
+
 	if (m_bEmmc)
 	{
 		if (pLog)
@@ -53,7 +65,6 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),EMMC_DRIVER_DEV_VENDOR,m_hDev);
 		}
         //get EMMC_DRIVER_DEV_LBA from
-        char *emmc_point = getenv(EMMC_POINT_NAME);
         m_hLbaDev= open(emmc_point, O_RDWR|O_SYNC,0);
 		if (m_hLbaDev<0)
 		{
@@ -93,19 +104,6 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),NAND_DRIVER_DEV_VENDOR,m_hDev);
 		}
 
-//		m_hLbaDev= open(NAND_DRIVER_DEV_LBA,O_RDWR|O_SYNC,0);
-//		if (m_hLbaDev<0)
-//		{
-//			if (pLog)
-//				pLog->Record(_T("ERROR:CRKUsbComm-->open %s failed,err=%d"),NAND_DRIVER_DEV_LBA,errno);
-//		}
-//		else
-//		{
-//			//CtrlNandLbaRead();
-//			CtrlNandLbaWrite();
-//			if (pLog)
-//				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),NAND_DRIVER_DEV_LBA,m_hLbaDev);
-//		}
 	}
 
 }

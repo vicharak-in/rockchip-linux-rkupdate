@@ -815,20 +815,20 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->GetFlashInfo failed!");
 		goto EXIT_UPGRADE;
 	}
-	pLog->Record("IDBlock Preparing...");
-	iRet = pDevice->PrepareIDB();
-	if (iRet!=ERR_SUCCESS)
-	{
-		pLog->Record("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed!");
-		goto EXIT_UPGRADE;
-	}
-	pLog->Record("IDBlock Writing...");
-	iRet = pDevice->DownloadIDBlock();
-	if (iRet!=ERR_SUCCESS)
-	{
-		pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed!");
-		goto EXIT_UPGRADE;
-	}
+	//pLog->Record("IDBlock Preparing...");
+	//iRet = pDevice->PrepareIDB();
+	//if (iRet!=ERR_SUCCESS)
+	//{
+	//	pLog->Record("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed!");
+	//	goto EXIT_UPGRADE;
+	//}
+	//pLog->Record("IDBlock Writing...");
+	//iRet = pDevice->DownloadIDBlock();
+	//if (iRet!=ERR_SUCCESS)
+	//{
+	//	pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed!");
+	//	goto EXIT_UPGRADE;
+	//}
 
 	if (strFw.find(_T(".bin"))!=tstring::npos)
 	{

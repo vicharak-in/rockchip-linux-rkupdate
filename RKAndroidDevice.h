@@ -171,6 +171,7 @@ typedef struct
 class CRKAndroidDevice :public CRKDevice
 {
 public:
+	static bool bGptFlag;
 	virtual int PrepareIDB();
 	virtual int DownloadIDBlock();
 	virtual int DownloadImage();

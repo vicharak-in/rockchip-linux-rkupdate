@@ -1,6 +1,6 @@
 #include "RKComm.h"
 #include "RKLog.h"
-
+#include "RKAndroidDevice.h"
 
 CRKComm::CRKComm(CRKLog *pLog)
 {
@@ -230,9 +230,8 @@ int CRKUsbComm::RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubC
 		else
 			return ERR_DEVICE_OPEN_FAILED;
 	}
-
-	//if (m_bEmmc)
-	//	dwPos += 8192;
+	if (m_bEmmc && !CRKAndroidDevice::bGptFlag)
+		dwPos += 8192;
 
     dwPosBuf = dwPos;
 
@@ -325,9 +324,8 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 		else
 			return ERR_DEVICE_OPEN_FAILED;
 	}
-
-	//if (m_bEmmc)
-	//	dwPos += 8192;
+	if (m_bEmmc && !CRKAndroidDevice::bGptFlag)
+		dwPos += 8192;
 
     dwPosBuf = dwPos;
 

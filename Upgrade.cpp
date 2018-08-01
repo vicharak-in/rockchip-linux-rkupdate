@@ -27,12 +27,12 @@ bool CreateUid(PBYTE pUid)
 	uuid_generate(guidValue);
 
 	memcpy(pGuid,(BYTE *)guidValue,16);
-	
+
 	USHORT usCrc=0;
 	usCrc = CRC_CCITT(pManufactory,28);
 	memcpy(pCrc,(BYTE *)&usCrc,2);
 	return true;
-	
+
 }
 
 bool ParsePartitionInfo(string &strPartInfo,string &strName,UINT &uiOffset,UINT &uiLen)
@@ -80,7 +80,7 @@ bool ParsePartitionInfo(string &strPartInfo,string &strName,UINT &uiOffset,UINT 
 	{
 		return false;
 	}
-	
+
 	prevPos = pos +1;
 	pos = strPartInfo.find(')',prevPos);
 	if (pos==string::npos)
@@ -96,7 +96,7 @@ bool ParsePartitionInfo(string &strPartInfo,string &strName,UINT &uiOffset,UINT 
 
 bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem)
 {
-	
+
 	stringstream paramStream(pParameter);
 	bool bRet,bFind=false;
 	string strLine,strPartition,strPartInfo,strPartName;
@@ -126,7 +126,7 @@ bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem)
 		if (posColon==string::npos)
 		{
 			continue;
-		}		
+		}
 		strPartition = strLine.substr(posColon+1);
 		//提取分区信息
 		pos = 0;
@@ -136,7 +136,7 @@ bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem)
 			strPartInfo = strPartition.substr(pos,posComma-pos);
 			bRet = ParsePartitionInfo(strPartInfo,strPartName,uiPartOffset,uiPartSize);
 			if (bRet)
-			{			
+			{
 				strcpy(item.szItemName,strPartName.c_str());
 				item.uiItemOffset = uiPartOffset;
 				item.uiItemSize = uiPartSize;
@@ -160,7 +160,7 @@ bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem)
 		break;
 	}
 	return bFind;
-	
+
 }
 bool get_parameter_loader( CRKComm *pComm,char *pParameter, int &nParamSize)
 {
@@ -303,7 +303,7 @@ bool check_fw_header(CRKComm *pComm,DWORD dwOffset,PSTRUCT_RKIMAGE_HDR pHeader,C
 	pBuf = NULL;
 	if (pHeader->tag!=RKIMAGE_TAG)
 		return false;
-	
+
     property_get("ro.product.model", model, "");
 	if (pLog)
 		pLog->Record(_T("model:%s\nbackup firmware model:%s\n"),model,pHeader->machine_model);
@@ -370,7 +370,7 @@ bool check_fw_crc(CRKComm *pComm,DWORD dwOffset,PSTRUCT_RKIMAGE_HDR pHeader,CRKL
 	if (uiCrc!=*((UINT *)(oldCrc)))
 		return false;
 	return true;
-	
+
 }
 
 bool download_backup_image(PARAM_ITEM_VECTOR &vecParam,char *pszItemName,DWORD dwBackupOffset,STRUCT_RKIMAGE_HDR &hdr,CRKComm *pComm,CRKLog *pLog=NULL)
@@ -433,7 +433,7 @@ bool download_backup_image(PARAM_ITEM_VECTOR &vecParam,char *pszItemName,DWORD d
 	UINT uiBufferSize=16*1024;
 	BYTE buffer[16*1024];
 	BYTE readbuffer[16*1024];
-	
+
 	//write image
 	ullRemain = ullSrcSize;
 	uiBegin = dwToOffset;
@@ -466,7 +466,7 @@ bool download_backup_image(PARAM_ITEM_VECTOR &vecParam,char *pszItemName,DWORD d
 		ullRemain -= uiTransferByte;
 		uiBegin += uiLen;
 		ullstart += uiTransferByte;
-		
+
 	}
 	pComm->RKU_ReopenLBAHandle();
 	if (g_progress_callback)
@@ -511,7 +511,7 @@ bool download_backup_image(PARAM_ITEM_VECTOR &vecParam,char *pszItemName,DWORD d
 		ullRemain -= uiTransferByte;
 		ullToStart += uiTransferByte;
 		ullstart += uiTransferByte;
-		
+
 	}
 	if (g_progress_callback)
 		g_progress_callback(1,0);
@@ -603,7 +603,7 @@ bool GetPubicKeyFromExternal(char *szDev,CRKLog *pLog,unsigned char *pKey,unsign
 	{
 		if (pLog)
 			pLog->Record(_T("ERROR:GetPubicKeyFromExternal-->check SecureHeader failed,tag=0x%x"),pSecureHdr->uiTag);
-		goto Exit_GetPubicKeyFromExternal;	
+		goto Exit_GetPubicKeyFromExternal;
 	}
 	nRsaByte = pSecureHdr->usRsaBit/8;
 	*((USHORT *)pKey) = pSecureHdr->usRsaBit;
@@ -723,7 +723,7 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 	g_progress_callback = (UpgradeProgressCallbackFunc)pProgressCallback;
 	if (g_progress_callback)
 		g_progress_callback(0.1,10);
-	
+
 	pLog = new CRKLog();
 	if (!pLog)
 		goto EXIT_UPGRADE;
@@ -740,6 +740,8 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKComm failed!");
 		goto EXIT_UPGRADE;
 	}
+
+#if 0   //closed by chad.ma 20180731
 	if (IsDeviceLock(pComm,bLock))
 	{
 		if (bLock)
@@ -792,6 +794,8 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->IsDeviceLock failed!");
 		goto EXIT_UPGRADE;
 	}
+#endif
+
 	pDevice = new CRKAndroidDevice(device);
 	if (!pDevice)
 	{
@@ -805,7 +809,7 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->PrintBuffer(strUid,uid,RKDEVICE_UID_LEN);
 		pLog->Record("uid:%s",strUid.c_str());
 	}
-	
+
 	pDevice->m_pCallback = (UpgradeCallbackFunc)pCallback;
 	pDevice->m_pProcessCallback = (UpgradeProgressCallbackFunc)pProgressCallback;
 	pLog->Record("Get FlashInfo...");
@@ -815,6 +819,7 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->GetFlashInfo failed!");
 		goto EXIT_UPGRADE;
 	}
+
 	//pLog->Record("IDBlock Preparing...");
 	//iRet = pDevice->PrepareIDB();
 	//if (iRet!=ERR_SUCCESS)
@@ -843,7 +848,7 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadImage failed!");
 		goto EXIT_UPGRADE;
 	}
-	
+
 	bSuccess = true;
 EXIT_UPGRADE:
 	if (bSuccess)
@@ -877,7 +882,7 @@ EXIT_UPGRADE:
 			pComm = NULL;
 		}
 	}
-	
+
 	return bSuccess;
 }
 bool do_rk_partition_upgrade(char *szFw,void *pCallback,void *pProgressCallback,char nBoot,char *szBootDev)
@@ -902,7 +907,7 @@ bool do_rk_partition_upgrade(char *szFw,void *pCallback,void *pProgressCallback,
 	if (!pLog)
 		goto EXIT_DOWNLOAD;
 	pLog->Record("Start to upgrade partition...");
-	
+
 	pComm = new CRKUsbComm(pLog);
 	if (!pComm)
 	{
@@ -934,7 +939,7 @@ bool do_rk_partition_upgrade(char *szFw,void *pCallback,void *pProgressCallback,
 					pLog->Record("ERROR:do_rk_partition_upgrade-->Get PubicKey failed,boot=%d,dev=NULL!",nBoot);
 				goto EXIT_DOWNLOAD;
 			}
-				
+
 			if (!UnlockDevice(pImage,pLog,key,nKeySize))
 			{
 				pLog->Record("ERROR:do_rk_partition_upgrade-->UnlockDevice failed!");
@@ -953,7 +958,7 @@ bool do_rk_partition_upgrade(char *szFw,void *pCallback,void *pProgressCallback,
 				goto EXIT_DOWNLOAD;
 			}
 		}
-			
+
 	}
 	else
 	{
@@ -983,7 +988,7 @@ bool do_rk_partition_upgrade(char *szFw,void *pCallback,void *pProgressCallback,
 		pLog->Record("ERROR:do_rk_partition_upgrade-->DownloadImage failed!");
 		goto EXIT_DOWNLOAD;
 	}
-	
+
 	bSuccess = true;
 EXIT_DOWNLOAD:
 	if (bSuccess)
@@ -1017,11 +1022,11 @@ EXIT_DOWNLOAD:
 			pComm = NULL;
 		}
 	}
-	
+
 	return bSuccess;
 }
 
-	
+
 bool do_rk_backup_recovery(void *pCallback,void *pProgressCallback)
 {
 	bool bSuccess=false,bRet;
@@ -1041,7 +1046,7 @@ bool do_rk_backup_recovery(void *pCallback,void *pProgressCallback)
 	if (!pLog)
 		goto EXIT_RECOVERY;
 	pLog->Record("Start to recovery from backup...");
-	
+
 	pComm = new CRKUsbComm(pLog);
 	if (!pComm)
 	{
@@ -1057,8 +1062,8 @@ bool do_rk_backup_recovery(void *pCallback,void *pProgressCallback)
 		pParam = new char[nParamSize];
 		if (pParam)
 		{
-			bRet = get_parameter_loader(pComm,pParam,nParamSize);	
-		}	
+			bRet = get_parameter_loader(pComm,pParam,nParamSize);
+		}
 	}
 	if (!bRet)
 	{
@@ -1120,7 +1125,7 @@ EXIT_RECOVERY:
 		delete []pParam;
 		pParam = NULL;
 	}
-	
+
 	if (pLog)
 	{
 		delete pLog;
@@ -1132,7 +1137,7 @@ EXIT_RECOVERY:
 		delete pComm;
 		pComm = NULL;
 	}
-	
+
 	return bSuccess;
-	
+
 }

@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #include "RKComm.h"
 #include "RKLog.h"
 #include "RKAndroidDevice.h"
@@ -32,6 +36,8 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
         m_bEmmc = true;
         close(m_hLbaDev);
     }
+
+    m_log = pLog;
 
 	if (m_bEmmc)
 	{
@@ -191,11 +197,25 @@ int CRKUsbComm::RKU_ReadFlashID(BYTE* lpBuffer)
 {
 	return ERR_SUCCESS;
 }
+
+void rknand_print_hex_data(char *s,unsigned int * buf,unsigned int len)
+{
+        unsigned int i,j,count;
+
+        printf("%s\n",s);
+        for(i=0;i<len;i+=4)
+                printf("%08x %08x %08x %08x\n",buf[i],buf[i+1],buf[i+2],buf[i+3]);
+}
+
+
 int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
 {
 	int ret;
+
+#if 0   //close by chad.ma
 	if (m_hDev<0)
 		return ERR_DEVICE_OPEN_FAILED;
+
 	ret = ioctl(m_hDev,GET_FLASH_INFO_IO,lpBuffer);
 	if (ret)
 	{
@@ -204,6 +224,57 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
 		return ERR_FAILED;
 	}
 	*puiRead = 11;
+#else
+/////////////////////////////////////////////////////////////////
+// get flashsize directly
+    if ( m_hLbaDev < 0)
+    {
+         m_hLbaDev = open(NAND_DRIVER_DEV_LBA,O_RDWR|O_SYNC,0);
+        if ( m_hLbaDev < 0)
+        {
+            if (m_log)
+                m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->open %s failed,err=%d"),NAND_DRIVER_DEV_LBA,errno);
+            return ERR_FAILED;
+        }
+        else
+        {
+            if (m_log)
+                m_log->Record(_T("INFO:RKU_ReadFlashInfo-->open %s ok,handle=%d"),NAND_DRIVER_DEV_LBA, m_hLbaDev);
+
+            ret = lseek(m_hLbaDev, 0, SEEK_END);
+
+            if (ret < 0)
+            {
+                if (m_log)
+                    m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->get %s file length fail"),NAND_DRIVER_DEV_LBA);
+                return ERR_FAILED;
+            }
+            else
+            {
+                char str[20] = {0};
+                lseek( m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
+                snprintf(str, sizeof(str), "%d", ret / 1024);
+                *(UINT*)lpBuffer = (ret / 1024);
+            }
+        }
+    }
+    else
+    {
+        ret = lseek( m_hLbaDev, 0, SEEK_END);
+        if (ret < 0)
+        {
+            if (m_log)
+                m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->get %s file length fail"),NAND_DRIVER_DEV_LBA);
+        }
+        else
+        {
+            char str[20] = {0};
+            lseek( m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
+            snprintf(str, sizeof(str), "%d", ret / 1024);
+            *(UINT*)lpBuffer = (ret / 1024);
+        }
+    }
+#endif
 	return ERR_SUCCESS;
 }
 int CRKUsbComm::RKU_ReadLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode)
@@ -321,8 +392,9 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 					m_log->Record(_T("INFO:RKU_WriteLBA-->open %s ok,handle=%d"),NAND_DRIVER_DEV_LBA,m_hLbaDev);
 			}
 		}
-		else
+		else {
 			return ERR_DEVICE_OPEN_FAILED;
+		}
 	}
 	if (m_bEmmc && !CRKAndroidDevice::bGptFlag)
 		dwPos += 8192;

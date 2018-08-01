@@ -41,7 +41,7 @@ void CRKDevice::SetUid(PBYTE value)
 		}
 		m_uid = value;
 	}
-	
+
 }
 void CRKDevice::SetMiscModifyFlag(ENUM_MISC_MODIFY_FLAG value)
 {
@@ -75,22 +75,22 @@ CRKDevice::CRKDevice(STRUCT_RKDEVICE_DESC &device)
 
 	Uid.setContainer(this);
 	Uid.setter(&CRKDevice::SetUid);
-	
+
 	PrepareEraseFlag.setContainer(this);
  	PrepareEraseFlag.setter(&CRKDevice::SetPrepareEraseFlag);
-	
+
 	WorkFlow.setContainer(this);
  	WorkFlow.setter(&CRKDevice::SetWorkFlow);
-	
+
 	MiscModifyFlag.setContainer(this);
  	MiscModifyFlag.setter(&CRKDevice::SetMiscModifyFlag);
-	
+
 	LogObjectPointer.setContainer(this);
     	LogObjectPointer.getter(&CRKDevice::GetLogObjectPointer);
-	
+
 	CommObjectPointer.setContainer(this);
     	CommObjectPointer.getter(&CRKDevice::GetCommObjectPointer);
-	
+
 	m_usb = device.emUsbType;
 	m_device = device.emDeviceType;
 	m_bcdUsb = device.usbcdUsb;
@@ -182,7 +182,7 @@ CRKDevice::~CRKDevice()
 		delete []m_pFlashInfoData;
 		m_pFlashInfoData = NULL;
 	}
-	
+
 }
 bool CRKDevice::SetObject(CRKImage *pImage,CRKComm *pComm,CRKLog *pLog)
 {
@@ -240,6 +240,8 @@ bool CRKDevice::GetFlashInfo()
 			m_pLog->PrintBuffer(strFlashInfo,(PBYTE)&info,11);
 			m_pLog->Record(_T("INFO:FlashInfo:%s"),strFlashInfo.c_str());
 		}
+
+#if 0   //closed by chad.ma
 		if ((info.usBlockSize==0)||(info.bPageSize==0))
 		{
 			if (m_pLog)
@@ -256,8 +258,12 @@ bool CRKDevice::GetFlashInfo()
 		{
 			_tcscpy(m_flashInfo.szManufacturerName,_T("UNKNOWN"));
 		}
-		
+#endif
+
 		m_flashInfo.uiFlashSize = info.uiFlashSize/2/1024;//MB
+		printf("%s: %d  FlashSize = %d MB\n",__func__,__LINE__, m_flashInfo.uiFlashSize);
+
+#if 0   //closed by chad.ma
 		m_flashInfo.uiPageSize = info.bPageSize/2;//KB
 		m_flashInfo.usBlockSize = info.usBlockSize/2;//KB
 		m_flashInfo.bECCBits = info.bECCBits;
@@ -275,7 +281,7 @@ bool CRKDevice::GetFlashInfo()
 		m_pFlashInfoData = new BYTE[SECTOR_SIZE*m_usFlashInfoDataLen];
 		memset(m_pFlashInfoData,0,SECTOR_SIZE*m_usFlashInfoDataLen);
 		memcpy(m_pFlashInfoData,(PBYTE)&info,uiRead);
-		
+#endif
 	}
 	else
 	{
@@ -283,9 +289,9 @@ bool CRKDevice::GetFlashInfo()
 		{
 			m_pLog->Record(_T("ERROR:GetFlashInfo-->RKU_ReadFlashInfo failed,RetCode(%d)"),iRet);
 		}
+
 		return false;
 	}
-	
 	return true;
 }
 bool CRKDevice::BuildBlockStateMap(BYTE bFlashCS)
@@ -335,9 +341,9 @@ int CRKDevice::ReadMutilSector(DWORD dwPos,DWORD dwCount,PBYTE lpBuffer)
 	iUsedBlockCount = dwPos / m_flashInfo.uiSectorPerBlock;
 	iUsedSecCount = dwPos - (iUsedBlockCount*m_flashInfo.uiSectorPerBlock);
 	iValidSecCount = m_flashInfo.usValidSecPerBlock-iUsedSecCount;
-	
+
 	dwMaxReadWriteOnce = MAX_WRITE_SECTOR;
-		
+
 	while(dwCount>0)
 	{
 		dwReadSector = (dwCount>=dwMaxReadWriteOnce) ? dwMaxReadWriteOnce : dwCount;
@@ -355,7 +361,7 @@ int CRKDevice::ReadMutilSector(DWORD dwPos,DWORD dwCount,PBYTE lpBuffer)
 			}
 			break;
 		}
-		
+
 		dwCount -= dwReadSector;
 		iUsedSecCount += dwReadSector;
 		iValidSecCount -= dwReadSector;
@@ -436,12 +442,12 @@ bool CRKDevice::CheckChip()
 		memcpy(m_chipData,bChipInfo,CHIPINFO_LEN);
 		DWORD *pValue;
 		pValue = (DWORD *)(&bChipInfo[0]);
-		
+
 		if ((ENUM_RKDEVICE_TYPE)(*pValue)==m_device)
 		{
 			return true;
 		}
-		
+
 		if (*pValue==0x524B3237)
 		{
 			curDeviceType = RK27_DEVICE;
@@ -539,7 +545,7 @@ CHAR CRKDevice::FindValidBlocks(char bBegin, char bLen)
 	}
 	if(bBegin >= IDBLOCK_TOP)
 		bIndex = -1;
-	
+
 	return bIndex;
 }
 USHORT UshortToBCD(USHORT num)
@@ -558,7 +564,7 @@ BYTE CRKDevice::RandomByte(BYTE bLowLimit,BYTE bHighLimit)
 {
 	BYTE k;
 	double d;
-	
+
 	d = (double)rand() / ((double)RAND_MAX+1);
 	k = (BYTE)( d*(bHighLimit-bLowLimit+1) );
 	return (bLowLimit+k);
@@ -622,16 +628,16 @@ bool CRKDevice::GetIDBData(UINT uiIDBCount,PBYTE lpBuf,UINT uiSecCount)
 			}
 			nDst = i;
 		}
-		
+
 		bRet = true;
-		
+
 		for(j=0;j<uiSecCount;j++)
 		{
 			bRet = memcmp(lpBuf+512*j,pIDB+512*j,512)==0;
 			if (!bRet)
 				break;
 		}
-		
+
 		if (bRet)
 		{//ÏàÍ¬
 			delete []pIDB;

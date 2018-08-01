@@ -2263,6 +2263,7 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 	}
 	bRet = get_uuid_from_parameter((char *)(m_paramBuffer+8),vecUuids);
 	backup_gpt = m_gptBuffer+34*SECTOR_SIZE;
+
 	create_gpt_buffer(m_gptBuffer,vecItems,vecUuids,m_flashInfo.uiFlashSize*2048);
 	memcpy(backup_gpt, m_gptBuffer + 2* SECTOR_SIZE, 32 * SECTOR_SIZE);
 	memcpy(backup_gpt + 32 * SECTOR_SIZE, m_gptBuffer + SECTOR_SIZE, SECTOR_SIZE);
@@ -2277,7 +2278,10 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 		}
 		return false;
 	}
-	iRet = m_pComm->RKU_WriteLBA(m_flashInfo.uiFlashSize*2048-33,33,backup_gpt);
+
+    DWORD dwPos;
+    dwPos = m_flashInfo.uiFlashSize*2048-33;
+	iRet = m_pComm->RKU_WriteLBA(dwPos,33,backup_gpt);
 	if (iRet!=ERR_SUCCESS)
 	{
 		if (m_pLog)

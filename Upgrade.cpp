@@ -5,6 +5,7 @@
 #include <uuid/uuid.h>
 UpgradeCallbackFunc g_callback=NULL;
 UpgradeProgressCallbackFunc g_progress_callback=NULL;
+extern int property_get(const char *key, char *value, const char *default_value);
 
 bool CreateUid(PBYTE pUid)
 {

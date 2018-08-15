@@ -2264,7 +2264,8 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 	bRet = get_uuid_from_parameter((char *)(m_paramBuffer+8),vecUuids);
 	backup_gpt = m_gptBuffer+34*SECTOR_SIZE;
 
-	create_gpt_buffer(m_gptBuffer,vecItems,vecUuids,m_flashInfo.uiFlashSize*2048);
+	//create_gpt_buffer(m_gptBuffer,vecItems,vecUuids,m_flashInfo.uiFlashSize*2048);
+	create_gpt_buffer(m_gptBuffer,vecItems,vecUuids, m_flashInfo.uiBlockNum);
 	memcpy(backup_gpt, m_gptBuffer + 2* SECTOR_SIZE, 32 * SECTOR_SIZE);
 	memcpy(backup_gpt + 32 * SECTOR_SIZE, m_gptBuffer + SECTOR_SIZE, SECTOR_SIZE);
 	prepare_gpt_backup(m_paramBuffer, backup_gpt);
@@ -2280,7 +2281,8 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 	}
 
     DWORD dwPos;
-    dwPos = m_flashInfo.uiFlashSize*2048-33;
+    //dwPos = m_flashInfo.uiFlashSize*2048-33;
+    dwPos = m_flashInfo.uiBlockNum - 33;
 	iRet = m_pComm->RKU_WriteLBA(dwPos,33,backup_gpt);
 	if (iRet!=ERR_SUCCESS)
 	{
@@ -2349,7 +2351,9 @@ bool CRKAndroidDevice::RKA_Gpt_Check(STRUCT_RKIMAGE_ITEM &entry,long long &curre
 		delete []pRead;
 		return false;
 	}
-	iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiFlashSize*2048-33,33,pRead);
+
+    iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiBlockNum - 33, 33, pRead);
+	//iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiFlashSize*2048-33,33,pRead);
 	if (iRet!=ERR_SUCCESS)
 	{
 		if (m_pLog)
@@ -2898,7 +2902,11 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
 			if (strPartName.find(_T("bootable")) != tstring::npos)
 				gptEntry->attributes.raw = PART_PROPERTY_BOOTABLE;
 			if (strPartName.find(_T("grow")) != tstring::npos)
+			{
+                printf("%s: %d  diskSectors = %lld \n",__func__,__LINE__, diskSectors);
 				gptEntry->ending_lba = cpu_to_le64(diskSectors - 34);
+                printf("%s: %d  gptEntry->ending_lba = %lld \n",__func__,__LINE__, gptEntry->ending_lba);
+			}
 			strPartName = strPartName.substr(0,iPos);
 			vecParts[i].szItemName[strPartName.size()] = 0;
 		}

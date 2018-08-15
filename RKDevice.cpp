@@ -260,7 +260,10 @@ bool CRKDevice::GetFlashInfo()
 		}
 #endif
 
-		m_flashInfo.uiFlashSize = info.uiFlashSize/2/1024;//MB
+		//m_flashInfo.uiFlashSize = info.uiFlashSize/2/1024;//MB
+		m_flashInfo.uiFlashSize = info.uiFlashSize / 1024;//MB
+		m_flashInfo.uiBlockNum = info.uiFlashSize * 2;
+		printf("%s: %d  info.uiFlashSize = %d total uiBlockNum = %d\n",__func__,__LINE__, info.uiFlashSize, m_flashInfo.uiBlockNum);
 		printf("%s: %d  FlashSize = %d MB\n",__func__,__LINE__, m_flashInfo.uiFlashSize);
 
 #if 0   //closed by chad.ma

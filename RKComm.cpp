@@ -63,7 +63,6 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
                 if (pLog)
                     pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),EMMC_DRIVER_DEV,m_hDev);
             }
-
 		}
 		else
 		{
@@ -80,9 +79,8 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 		else
 		{
 			if (pLog)
-				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),EMMC_DRIVER_DEV_LBA,m_hLbaDev);
+				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),emmc_point, m_hLbaDev);
 		}
-
 	}
 	else
 	{
@@ -102,14 +100,12 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
                 if (pLog)
                     pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),NAND_DRIVER_DEV,m_hDev);
             }
-
 		}
 		else
 		{
 			if (pLog)
 				pLog->Record(_T("INFO:CRKUsbComm-->%s=%d"),NAND_DRIVER_DEV_VENDOR,m_hDev);
 		}
-
 	}
 
 }
@@ -210,7 +206,7 @@ void rknand_print_hex_data(char *s,unsigned int * buf,unsigned int len)
 
 int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
 {
-	int ret;
+	long long ret;
 
 #if 0   //close by chad.ma
 	if (m_hDev<0)
@@ -241,7 +237,7 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
             if (m_log)
                 m_log->Record(_T("INFO:RKU_ReadFlashInfo-->open %s ok,handle=%d"),NAND_DRIVER_DEV_LBA, m_hLbaDev);
 
-            ret = lseek(m_hLbaDev, 0, SEEK_END);
+            ret = lseek64(m_hLbaDev, 0, SEEK_END);
 
             if (ret < 0)
             {
@@ -252,7 +248,7 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
             else
             {
                 char str[20] = {0};
-                lseek( m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
+                lseek64( m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
                 snprintf(str, sizeof(str), "%d", ret / 1024);
                 *(UINT*)lpBuffer = (ret / 1024);
             }
@@ -260,16 +256,23 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead)
     }
     else
     {
-        ret = lseek( m_hLbaDev, 0, SEEK_END);
+        ret = lseek64(m_hLbaDev, 0, SEEK_END);
         if (ret < 0)
         {
-            if (m_log)
-                m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->get %s file length fail"),NAND_DRIVER_DEV_LBA);
+            if (m_log) {
+                if (m_bEmmc)
+                    m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->get %s file length fail"),
+                                getenv(EMMC_POINT_NAME));
+                else
+                    m_log->Record(_T("ERROR:RKU_ReadFlashInfo-->get %s file length fail"),
+                                NAND_DRIVER_DEV_LBA);
+            }
+            return ERR_FAILED;
         }
         else
         {
             char str[20] = {0};
-            lseek( m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
+            lseek64(m_hLbaDev, 0, SEEK_SET); //reset the cfo to begin
             snprintf(str, sizeof(str), "%d", ret / 1024);
             *(UINT*)lpBuffer = (ret / 1024);
         }

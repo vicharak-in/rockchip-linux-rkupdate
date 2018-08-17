@@ -110,7 +110,7 @@ CHAR CRKAndroidDevice::FindIDBlock(char pos,char &IDBlockPos)
 			{
 				continue;//tag²»¶Ô
 			}
-        }
+		}
 
 	}
 	return -1;
@@ -492,7 +492,7 @@ int CRKAndroidDevice::MakeIDBlockData(PBYTE lpIDBlock)
 	{
 		m_pLog->Record(_T("INFO:MakeIDBlockData in"));
 	}
- 	RKANDROID_IDB_SEC0 sector0Info;
+	RKANDROID_IDB_SEC0 sector0Info;
 	RKANDROID_IDB_SEC1 sector1Info;
 	RKANDROID_IDB_SEC2 sector2Info;
 	RKANDROID_IDB_SEC3 sector3Info;
@@ -601,17 +601,17 @@ int CRKAndroidDevice::MakeIDBlockData(PBYTE lpIDBlock)
 	sector2Info.uiBootCodeCrc = CRC_32((PBYTE)(lpIDBlock+SECTOR_SIZE*4),sector0Info.usBootCodeSize*SECTOR_SIZE);
 	memcpy(lpIDBlock+SECTOR_SIZE*2, &sector2Info, SECTOR_SIZE);
 
-    for(i=0; i<4; i++)
+	for(i=0; i<4; i++)
 	{
-        if(i == 1)
+		if(i == 1)
 		{
-            continue;
-        }
-        else
+			continue;
+		}
+		else
 		{
 			P_RC4(lpIDBlock+SECTOR_SIZE*i, SECTOR_SIZE);
-        }
-    }
+		}
+	}
 
 	delete []loaderDataBuffer;
 	delete []loaderCodeBuffer;
@@ -639,7 +639,7 @@ bool CRKAndroidDevice::MakeSpareData(PBYTE lpIDBlock,DWORD dwSectorNum,PBYTE lpS
 		bch_encode(bchInBuf, bchOutBuf);
 		memcpy(lpSpareBuffer+i*16+3, bchOutBuf+515, 13);
 	}
-    lpSpareBuffer[2] = 'i';
+	lpSpareBuffer[2] = 'i';
 	return true;
 }
 
@@ -936,6 +936,14 @@ int CRKAndroidDevice::DownloadImage()
 				{
 					m_dwBackupOffset = rkImageHead.item[i].flash_offset;
 				}
+
+				if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+				{
+					//if find "recovery" partition, we ignore,
+					//recovery.img update processimg in main system.
+					continue;
+				}
+
 				if (rkImageHead.item[i].file[55]=='H')
 				{
 					ulItemSize = *((DWORD *)(&rkImageHead.item[i].file[56]));
@@ -1004,6 +1012,7 @@ int CRKAndroidDevice::DownloadImage()
 			}
 			if (GptFlag)
 			{
+			   m_pLog->Record(_T("########### RKA_Gpt_Download #########\n"));
 				bRet = RKA_Gpt_Download(rkImageHead.item[i],uiCurrentByte,uiTotalSize);
 				if ( !bRet )
 				{
@@ -1031,10 +1040,18 @@ int CRKAndroidDevice::DownloadImage()
 					return -4;
 				}
 			}
-
 		}
 		else
 		{
+			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+			{
+				//chad.ma add for ignore 'recovery' partition update at here.
+				 m_pLog->Record(_T("######Ignore %s download ######\n"), rkImageHead.item[i].name);
+				continue;
+			}
+
+			m_pLog->Record(_T("###### Download %s ... #######\n"),rkImageHead.item[i].name);
+
 			if (rkImageHead.item[i].file[55]=='H')
 			{
 				ulItemSize = *((DWORD *)(&rkImageHead.item[i].file[56]));
@@ -1112,6 +1129,13 @@ int CRKAndroidDevice::DownloadImage()
 		}
 		else
 		{
+			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+			{
+				//chad.ma add for ignore 'recovery' partition check at here.
+				m_pLog->Record(_T("###### Ignore %s Check ######\n"), rkImageHead.item[i].name);
+				continue;
+			}
+
 			if (rkImageHead.item[i].file[55]=='H')
 			{
 				ulItemSize = *((DWORD *)(&rkImageHead.item[i].file[56]));
@@ -2280,9 +2304,9 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 		return false;
 	}
 
-    DWORD dwPos;
-    //dwPos = m_flashInfo.uiFlashSize*2048-33;
-    dwPos = m_flashInfo.uiBlockNum - 33;
+	DWORD dwPos;
+	//dwPos = m_flashInfo.uiFlashSize*2048-33;
+	dwPos = m_flashInfo.uiBlockNum - 33;
 	iRet = m_pComm->RKU_WriteLBA(dwPos,33,backup_gpt);
 	if (iRet!=ERR_SUCCESS)
 	{
@@ -2352,7 +2376,7 @@ bool CRKAndroidDevice::RKA_Gpt_Check(STRUCT_RKIMAGE_ITEM &entry,long long &curre
 		return false;
 	}
 
-    iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiBlockNum - 33, 33, pRead);
+	iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiBlockNum - 33, 33, pRead);
 	//iRet = m_pComm->RKU_ReadLBA(m_flashInfo.uiFlashSize*2048-33,33,pRead);
 	if (iRet!=ERR_SUCCESS)
 	{
@@ -2903,9 +2927,9 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
 				gptEntry->attributes.raw = PART_PROPERTY_BOOTABLE;
 			if (strPartName.find(_T("grow")) != tstring::npos)
 			{
-                printf("%s: %d  diskSectors = %lld \n",__func__,__LINE__, diskSectors);
+				printf("%s: %d  diskSectors = %lld \n",__func__,__LINE__, diskSectors);
 				gptEntry->ending_lba = cpu_to_le64(diskSectors - 34);
-                printf("%s: %d  gptEntry->ending_lba = %lld \n",__func__,__LINE__, gptEntry->ending_lba);
+				printf("%s: %d  gptEntry->ending_lba = %lld \n",__func__,__LINE__, gptEntry->ending_lba);
 			}
 			strPartName = strPartName.substr(0,iPos);
 			vecParts[i].szItemName[strPartName.size()] = 0;

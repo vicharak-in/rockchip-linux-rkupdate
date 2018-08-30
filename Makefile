@@ -9,7 +9,6 @@ OBJ =   CRC.o \
 	RKImage.o \
 	RKLog.o \
 	Upgrade.o \
-	property.o \
 	main.o
 
 $(PROM): $(OBJ)

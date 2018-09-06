@@ -304,6 +304,7 @@ bool check_fw_header(CRKComm *pComm,DWORD dwOffset,PSTRUCT_RKIMAGE_HDR pHeader,C
 	if (pHeader->tag!=RKIMAGE_TAG)
 		return false;
 
+#if 0 //chad.ma close
     property_get("ro.product.model", model, "");
 	if (pLog)
 		pLog->Record(_T("model:%s\nbackup firmware model:%s\n"),model,pHeader->machine_model);
@@ -311,6 +312,8 @@ bool check_fw_header(CRKComm *pComm,DWORD dwOffset,PSTRUCT_RKIMAGE_HDR pHeader,C
     {
         return false;
     }
+#endif
+
 	return true;
 }
 bool check_fw_crc(CRKComm *pComm,DWORD dwOffset,PSTRUCT_RKIMAGE_HDR pHeader,CRKLog *pLog=NULL)

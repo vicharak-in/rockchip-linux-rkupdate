@@ -38,7 +38,6 @@
 #include <wchar.h>
 #include <errno.h>
 #include <ctype.h>
-#include "cutils/properties.h"
 
 #include "Property.hpp"
 #include <list>
@@ -156,7 +155,7 @@ typedef enum
 	WF_DOWNLOADBOOT
 }ENUM_WORKFLOW;
 #pragma pack(1)
-typedef struct  
+typedef struct
 {
 	USHORT	usYear;
 	BYTE	ucMonth;

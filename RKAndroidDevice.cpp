@@ -937,10 +937,12 @@ int CRKAndroidDevice::DownloadImage()
 					m_dwBackupOffset = rkImageHead.item[i].flash_offset;
 				}
 
-				if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+				if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0
+					|| strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 				{
-					//if find "recovery" partition, we ignore,
+					//if find "recovery" or "misc" partition, we ignore,
 					//recovery.img update processimg in main system.
+					//misc.img not process here.
 					continue;
 				}
 
@@ -1043,9 +1045,10 @@ int CRKAndroidDevice::DownloadImage()
 		}
 		else
 		{
-			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
+				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 			{
-				//chad.ma add for ignore 'recovery' partition update at here.
+				//chad.ma add for ignore 'recovery' or 'misc' partition update at here.
 				 m_pLog->Record(_T("######Ignore %s download ######\n"), rkImageHead.item[i].name);
 				continue;
 			}
@@ -1129,9 +1132,10 @@ int CRKAndroidDevice::DownloadImage()
 		}
 		else
 		{
-			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0)
+			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
+				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 			{
-				//chad.ma add for ignore 'recovery' partition check at here.
+				//chad.ma add for ignore 'recovery' or 'misc' partition check at here.
 				m_pLog->Record(_T("###### Ignore %s Check ######\n"), rkImageHead.item[i].name);
 				continue;
 			}

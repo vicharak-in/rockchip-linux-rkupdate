@@ -648,46 +648,39 @@ int CRKAndroidDevice::WriteIDBlock(PBYTE lpIDBlock,DWORD dwSectorNum,bool bErase
 	if (m_pLog)
 	{
 		m_pLog->Record(_T("INFO:WriteIDBlock in"));
+		m_pLog->Record(_T("INFO:---------------------"));
 	}
-	STRUCT_END_WRITE_SECTOR end_write_sector_data;
-	BYTE writeBuf[8*SECTOR_SIZE];
-	UINT uiOffset,uiTotal,uiWriteByte,uiCrc;
-	int iRet,i,nTryCount=3;
-	uiTotal = dwSectorNum*SECTOR_SIZE;
-	uiCrc = CRC_32(lpIDBlock,uiTotal);
-	end_write_sector_data.uiSize = uiTotal;
-	end_write_sector_data.uiCrc = uiCrc;
-	for(i=0;i<5;i++)
-		end_write_sector_data.uiBlock[i] = m_idBlockOffset[i];
-	while (nTryCount>0)
-	{
-		uiOffset = 0;
-		uiTotal = dwSectorNum * SECTOR_SIZE;
-		while (uiTotal>0)
-		{
-			if (uiTotal>=2048)
-				uiWriteByte = 2048;
-			else
-				uiWriteByte = uiTotal;
 
-			memcpy(writeBuf+8,lpIDBlock+uiOffset,uiWriteByte);
-			iRet = m_pComm->RKU_WriteSector(uiOffset,uiWriteByte,writeBuf);
-			if (iRet!=ERR_SUCCESS)
+	UINT uiBufferSize=16*1024;
+	int iRet,i,nTryCount=3;
+	UINT uiTotal;
+	uiTotal = dwSectorNum*SECTOR_SIZE;
+
+	while (nTryCount > 0)
+	{
+		m_pLog->Record(_T("dwSectorNum=%d"),dwSectorNum);
+		m_pLog->Record(_T("uiTotal=%d\n"),uiTotal);
+
+		//iRet = m_pComm->RKU_EndWriteSector((BYTE*)&end_write_sector_data);
+		for(i = 0; i <= 4; i++)
+		{
+			iRet = m_pComm->RKU_WriteLBA(64 + i * 1024, dwSectorNum, lpIDBlock);
+			if (iRet != ERR_SUCCESS)
 			{
 				if (m_pLog)
 					m_pLog->Record(_T("ERROR:WriteIDBlock-->RKU_WriteSector failed!"));
 				return -1;
 			}
-			uiOffset += uiWriteByte;
-			uiTotal -= uiWriteByte;
 		}
-		iRet = m_pComm->RKU_EndWriteSector((BYTE*)&end_write_sector_data);
-		if (iRet==ERR_SUCCESS)
+
+		if (iRet == ERR_SUCCESS)
 			break;
 		nTryCount--;
 	}
-	if (nTryCount<=0)
+
+	if (nTryCount <= 0)
 		return -2;
+
 	if (m_pLog)
 	{
 		m_pLog->Record(_T("INFO:WriteIDBlock out"));
@@ -704,6 +697,8 @@ int CRKAndroidDevice::
 	string strInfo="";
 	char szTmp[32];
 	bool bFirstCS=false;
+
+#if 0   //chad.ma closed 2018/09/27
 	for(i=0; i<8; i++)
 	{
 		if( m_flashInfo.bFlashCS&(1<<i) )
@@ -742,8 +737,6 @@ int CRKAndroidDevice::
 	{
 		m_pLog->Record(_T("ERROR:PrepareIDB-->IDblock count=%d."),m_oldIDBCounts);
 	}
-
-
 
 	memset(m_backupBuffer,0,SECTOR_SIZE);
 
@@ -808,6 +801,8 @@ int CRKAndroidDevice::
 			return -4;
 		}
 	}
+#endif
+
 	if ( !CalcIDBCount() )
 	{
 		if (m_pLog)
@@ -873,7 +868,7 @@ int CRKAndroidDevice::DownloadIDBlock()
 		{
 			m_pLog->Record(_T("ERROR:DownloadIDBlock-->WriteIDBlock failed,RetCode(%d)"),iRet);
 		}
-		BufferWriteBack();
+		//BufferWriteBack();
 		return -3;
 	}
 
@@ -1034,11 +1029,11 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T(" ERROR:DownloadImage-->RKA_Param_Download failed"));
 					}
-//				if(m_pCallback)
-//				{
-//					sprintf(szPrompt,"%s writing... failed",rkImageHead.item[i].name);
-//					m_pCallback(szPrompt);
-//				}
+//    				if(m_pCallback)
+//    				{
+//    					sprintf(szPrompt,"%s writing... failed",rkImageHead.item[i].name);
+//    					m_pCallback(szPrompt);
+//    				}
 					return -4;
 				}
 			}
@@ -1610,7 +1605,7 @@ bool CRKAndroidDevice::BufferWriteBack()
 				uiWriteByte = uiTotal;
 
 			memcpy(writeBuf+8,pWriteBackBuffer+uiOffset,uiWriteByte);
-			iRet = m_pComm->RKU_WriteSector(uiOffset,uiWriteByte,writeBuf);
+			iRet = m_pComm->RKU_WriteLBA(64+uiOffset,uiWriteByte,writeBuf);
 			if (iRet!=ERR_SUCCESS)
 			{
 				if (m_pLog)
@@ -1620,7 +1615,7 @@ bool CRKAndroidDevice::BufferWriteBack()
 			uiOffset += uiWriteByte;
 			uiTotal -= uiWriteByte;
 		}
-		iRet = m_pComm->RKU_EndWriteSector((BYTE*)&end_write_sector_data);
+		//iRet = m_pComm->RKU_EndWriteSector((BYTE*)&end_write_sector_data);
 		if (iRet==ERR_SUCCESS)
 			break;
 		nTryCount--;
@@ -2253,7 +2248,6 @@ bool CRKAndroidDevice::RKA_Param_Check(STRUCT_RKIMAGE_ITEM &entry,long long &cur
 	delete []pRead;
 	return true;
 }
-
 
 bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte)
 {
@@ -2930,11 +2924,7 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
 			if (strPartName.find(_T("bootable")) != tstring::npos)
 				gptEntry->attributes.raw = PART_PROPERTY_BOOTABLE;
 			if (strPartName.find(_T("grow")) != tstring::npos)
-			{
-				printf("%s: %d  diskSectors = %lld \n",__func__,__LINE__, diskSectors);
 				gptEntry->ending_lba = cpu_to_le64(diskSectors - 34);
-				printf("%s: %d  gptEntry->ending_lba = %lld \n",__func__,__LINE__, gptEntry->ending_lba);
-			}
 			strPartName = strPartName.substr(0,iPos);
 			vecParts[i].szItemName[strPartName.size()] = 0;
 		}

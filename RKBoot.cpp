@@ -117,7 +117,7 @@ bool CRKBoot::GetEntryProperty(ENUM_RKBOOTENTRY type,UCHAR ucIndex,DWORD &dwSize
 	dwDelay = pEntry->dwDataDelay;
 	dwSize = pEntry->dwDataSize;
 	if (pName)
-	{	
+	{
 		WCHAR_To_char(pEntry->szName,pName,20);
 	}
 	return true;
@@ -184,7 +184,7 @@ CHAR CRKBoot::GetIndexByName(ENUM_RKBOOTENTRY type,tchar *pName)
 	{
 		PSTRUCT_RKBOOT_ENTRY pEntry;
 		pEntry = (PSTRUCT_RKBOOT_ENTRY)(m_BootData+dwOffset+(ucSize*i));
-		
+
 		char szName[20];
 		WCHAR_To_char(pEntry->szName,szName,20);
 		if (_tcsicmp(pName,szName)==0)
@@ -230,6 +230,7 @@ CRKBoot::CRKBoot(PBYTE lpBootData,DWORD dwBootSize,bool &bCheck)
 		bCheck=CrcCheck();
 		if (!bCheck)
 		{
+			printf("CRKBoot : CrcCheck happen error\n");
 			return;
 		}
 		PSTRUCT_RKBOOT_HEAD pBootHead;
@@ -237,6 +238,7 @@ CRKBoot::CRKBoot(PBYTE lpBootData,DWORD dwBootSize,bool &bCheck)
 		if ( pBootHead->uiTag!=0x544F4F42)
 		{
 			bCheck=false;
+			printf("CRKBoot : pBootHead->uiTag!=0x544F4F42\n");
 			return;
 		}
 		if (pBootHead->ucRc4Flag)
@@ -279,6 +281,7 @@ CRKBoot::CRKBoot(PBYTE lpBootData,DWORD dwBootSize,bool &bCheck)
 	else
 	{
 		bCheck = false;
+		printf("CRKBoot : lpBootData = null\n");
 		m_BootData=NULL;
 	}
 }

@@ -707,7 +707,7 @@ bool UnlockDevice(CRKImage *pImage,CRKLog *pLog,unsigned char *pKey,unsigned int
 		return false;
 }
 
-
+extern int sdBootUpdate;
 bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,char *szBootDev)
 {
 	bool bSuccess=false,bRet=false,bLock;

@@ -2,6 +2,7 @@
 #define tole(x)		(x)
 /*factor is 0xedb88320*/
 bool CRKAndroidDevice::bGptFlag = 0;
+extern int sdBootUpdate;
 unsigned int crc32table_le[] = {
 	tole(0x00000000L), tole(0x77073096L), tole(0xee0e612cL), tole(0x990951baL),
 	tole(0x076dc419L), tole(0x706af48fL), tole(0xe963a535L), tole(0x9e6495a3L),
@@ -664,7 +665,7 @@ int CRKAndroidDevice::WriteIDBlock(PBYTE lpIDBlock,DWORD dwSectorNum,bool bErase
 		//iRet = m_pComm->RKU_EndWriteSector((BYTE*)&end_write_sector_data);
 		for(i = 0; i <= 4; i++)
 		{
-			iRet = m_pComm->RKU_WriteLBA(64 + i * 1024, dwSectorNum, lpIDBlock);
+			iRet = m_pComm->RKU_LoaderWriteLBA(64 + i * 1024, dwSectorNum, lpIDBlock);
 			if (iRet != ERR_SUCCESS)
 			{
 				if (m_pLog)
@@ -935,10 +936,11 @@ int CRKAndroidDevice::DownloadImage()
 				if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0
 					|| strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 				{
-					//if find "recovery" or "misc" partition, we ignore,
-					//recovery.img update processimg in main system.
-					//misc.img not process here.
-					continue;
+					if (!sdBootUpdate)
+						//if find "recovery" or "misc" partition, we ignore,
+						//recovery.img update processimg in main system.
+						//misc.img not process here.
+						continue;
 				}
 
 				if (rkImageHead.item[i].file[55]=='H')
@@ -974,6 +976,8 @@ int CRKAndroidDevice::DownloadImage()
 	}
 	GptFlag = GetParameterGptFlag(rkImageHead.item[iParamPos]);
 	bGptFlag = GptFlag;
+    printf(">>>>>>>> bGptFlag = %d, lineno = %d\n", bGptFlag,__LINE__);
+    printf(">>>>>>>> CRKAndroidDevice::bGptFlag = %d \n", CRKAndroidDevice::bGptFlag);
 	if (!GptFlag)
 	{
 		if (!CheckParamPartSize(rkImageHead,iParamPos))
@@ -1009,7 +1013,7 @@ int CRKAndroidDevice::DownloadImage()
 			}
 			if (GptFlag)
 			{
-			   m_pLog->Record(_T("########### RKA_Gpt_Download #########\n"));
+				m_pLog->Record(_T("########### RKA_Gpt_Download #########"));
 				bRet = RKA_Gpt_Download(rkImageHead.item[i],uiCurrentByte,uiTotalSize);
 				if ( !bRet )
 				{
@@ -1029,11 +1033,11 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T(" ERROR:DownloadImage-->RKA_Param_Download failed"));
 					}
-//    				if(m_pCallback)
-//    				{
-//    					sprintf(szPrompt,"%s writing... failed",rkImageHead.item[i].name);
-//    					m_pCallback(szPrompt);
-//    				}
+//				if(m_pCallback)
+//				{
+//					sprintf(szPrompt,"%s writing... failed",rkImageHead.item[i].name);
+//					m_pCallback(szPrompt);
+//				}
 					return -4;
 				}
 			}
@@ -1043,12 +1047,15 @@ int CRKAndroidDevice::DownloadImage()
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
 				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 			{
-				//chad.ma add for ignore 'recovery' or 'misc' partition update at here.
-				 m_pLog->Record(_T("######Ignore %s download ######\n"), rkImageHead.item[i].name);
-				continue;
+				if (!sdBootUpdate) {
+					//not sdboot update image, we will ignore download partiton.
+					//chad.ma add for ignore 'recovery' or 'misc' partition update at here.
+					m_pLog->Record(_T("\n######Ignore %s download ######\n"), rkImageHead.item[i].name);
+					continue;
+				}
 			}
 
-			m_pLog->Record(_T("###### Download %s ... #######\n"),rkImageHead.item[i].name);
+			m_pLog->Record(_T("###### Download %s ... #######"),rkImageHead.item[i].name);
 
 			if (rkImageHead.item[i].file[55]=='H')
 			{
@@ -1130,9 +1137,12 @@ int CRKAndroidDevice::DownloadImage()
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
 				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
 			{
-				//chad.ma add for ignore 'recovery' or 'misc' partition check at here.
-				m_pLog->Record(_T("###### Ignore %s Check ######\n"), rkImageHead.item[i].name);
-				continue;
+				if (!sdBootUpdate) {
+					//not sdboot update image , we will ignore check partiton.
+					//chad.ma add for ignore 'recovery' or 'misc' partition check at here.
+					m_pLog->Record(_T("\n###### Ignore %s Check ######\n"), rkImageHead.item[i].name);
+					continue;
+				}
 			}
 
 			if (rkImageHead.item[i].file[55]=='H')
@@ -1743,7 +1753,7 @@ bool CRKAndroidDevice::RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &c
 		uifileBufferSize = entry.size;
 	if (m_pLog)
 	{
-		m_pLog->Record(_T(" INFO:Start to download %s,offset=0x%x,size=%llu"),entry.name,entry.flash_offset,uifileBufferSize);
+		m_pLog->Record(_T("INFO:Start to download %s,offset=0x%x,size=%llu"),entry.name,entry.flash_offset,uifileBufferSize);
 	}
 
 	BYTE byRWMethod=RWMETHOD_IMAGE;

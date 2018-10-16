@@ -6,6 +6,8 @@
 enum { INSTALL_SUCCESS, INSTALL_ERROR, INSTALL_CORRUPT };
 
 FILE* cmd_pipe = NULL;
+int sdBootUpdate = 0;
+
 
 void handle_upgrade_callback(char *szPrompt)
 {
@@ -27,7 +29,7 @@ void handle_upgrade_progress_callback(float portion, float seconds)
 int main(int argc, char *argv[]){
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
-    if(argc != 4){
+    if(argc != 5){
         printf("unexpected number of arguments (%d)\n", argc);
         fprintf(stderr, "unexpected number of arguments (%d)\n", argc);
         return 1;
@@ -35,8 +37,9 @@ int main(int argc, char *argv[]){
     int fd = atoi(argv[2]);
     cmd_pipe = fdopen(fd, "wb");
     setlinebuf(cmd_pipe);
-    
+
     char* filepath = argv[3];
+    sdBootUpdate = atoi(argv[4]);
 
     //call update
     bool bRet = do_rk_firmware_upgrade(filepath, (void *)handle_upgrade_callback, (void *)handle_upgrade_progress_callback);
@@ -44,13 +47,13 @@ int main(int argc, char *argv[]){
     if(!bRet)
         status = INSTALL_ERROR;
     else
-        status = INSTALL_SUCCESS; 
+        status = INSTALL_SUCCESS;
 
     sleep(5);
     sync();
     return status;
 
-#if 0 
+#if 0
     do_rk_firmware_upgrade(argv[1], NULL, NULL);
     return 1;
 #endif

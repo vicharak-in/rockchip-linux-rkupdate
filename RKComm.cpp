@@ -74,7 +74,7 @@ CRKUsbComm::CRKUsbComm(CRKLog *pLog):CRKComm(pLog)
 		if (m_hLbaDev<0)
 		{
 			if (pLog)
-				pLog->Record(_T("ERROR:CRKUsbComm-->open %s failed,err=%d"),EMMC_DRIVER_DEV_LBA,errno);
+				pLog->Record(_T("ERROR:CRKUsbComm-->open %s failed,err=%d"),emmc_point,errno);
 		}
 		else
 		{
@@ -414,6 +414,7 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 
 		return ERR_FAILED;
 	}
+
 	ret = write(m_hLbaDev,lpBuffer,dwCount*512);
 	if (ret!=dwCount*512)
 	{
@@ -422,14 +423,63 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySub
 			m_log->Record(_T("ERROR:RKU_WriteLBA write failed,err=%d"),errno);
 		return ERR_FAILED;
 	}
-//	ret = fsync(m_hLbaDev);
-//	if (ret!=0)
-//	{
-//		if (m_log)
-//			m_log->Record(_T("ERROR:RKU_WriteLBA fsync failed,err=%d"),errno);
-//	}
+
 	return ERR_SUCCESS;
 }
+
+int CRKUsbComm::RKU_LoaderWriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode)
+{
+	long long ret;
+    long long dwPosBuf;
+	if (m_hLbaDev<0)
+	{
+		if (!m_bEmmc)
+		{
+			m_hLbaDev= open(NAND_DRIVER_DEV_LBA,O_RDWR|O_SYNC,0);
+			if (m_hLbaDev<0)
+			{
+				if (m_log)
+					m_log->Record(_T("ERROR:RKU_WriteLBA-->open %s failed,err=%d"),NAND_DRIVER_DEV_LBA,errno);
+				return ERR_DEVICE_OPEN_FAILED;
+			}
+			else
+			{
+				if (m_log)
+					m_log->Record(_T("INFO:RKU_WriteLBA-->open %s ok,handle=%d"),NAND_DRIVER_DEV_LBA,m_hLbaDev);
+			}
+		}
+		else {
+			return ERR_DEVICE_OPEN_FAILED;
+		}
+	}
+
+    dwPosBuf = dwPos;
+    //if (m_log)
+    //    m_log->Record(_T("INFO: dwPosBuf = %d ,will seek to pos = 0x%08x"), dwPosBuf, dwPosBuf*512);
+
+	ret = lseek64(m_hLbaDev,(off64_t)dwPosBuf*512,SEEK_SET);
+	if (ret<0)
+	{
+		if (m_log){
+			m_log->Record(_T("ERROR:RKU_WriteLBA seek failed,err=%d,ret:%lld"),errno, ret);
+            m_log->Record(_T("the dwPosBuf = dwPosBuf*512,dwPosBuf:%lld!"), dwPosBuf*512);
+        }
+
+		return ERR_FAILED;
+	}
+
+	ret = write(m_hLbaDev,lpBuffer,dwCount*512);
+	if (ret!=dwCount*512)
+	{
+		sleep(1);
+		if (m_log)
+			m_log->Record(_T("ERROR:RKU_WriteLBA write failed,err=%d"),errno);
+		return ERR_FAILED;
+	}
+
+	return ERR_SUCCESS;
+}
+
 int CRKUsbComm::RKU_WriteSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer)
 {
 	int ret;

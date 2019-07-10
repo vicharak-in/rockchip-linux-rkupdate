@@ -1008,7 +1008,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (m_pCallback)
 			{
-				sprintf(szPrompt,"%s writing...",rkImageHead.item[i].name);
+				sprintf(szPrompt,"%s writing...\n",rkImageHead.item[i].name);
 				m_pCallback(szPrompt);
 			}
 			if (GptFlag)
@@ -1070,7 +1070,7 @@ int CRKAndroidDevice::DownloadImage()
 			{
 				if (m_pCallback)
 				{
-					sprintf(szPrompt,"%s writing...",rkImageHead.item[i].name);
+					sprintf(szPrompt,"%s writing...\n",rkImageHead.item[i].name);
 					m_pCallback(szPrompt);
 				}
 				bRet = RKA_File_Download(rkImageHead.item[i],uiCurrentByte,uiTotalSize);
@@ -1103,7 +1103,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (m_pCallback)
 			{
-				sprintf(szPrompt,"%s checking...",rkImageHead.item[i].name);
+				sprintf(szPrompt,"%s checking...\n",rkImageHead.item[i].name);
 				m_pCallback(szPrompt);
 			}
 			if (GptFlag)
@@ -1157,7 +1157,7 @@ int CRKAndroidDevice::DownloadImage()
 			{
 				if (m_pCallback)
 				{
-					sprintf(szPrompt,"%s checking...",rkImageHead.item[i].name);
+					sprintf(szPrompt,"%s checking...\n",rkImageHead.item[i].name);
 					m_pCallback(szPrompt);
 				}
 				bRet = RKA_File_Check(rkImageHead.item[i],uiCurrentByte,uiTotalSize);

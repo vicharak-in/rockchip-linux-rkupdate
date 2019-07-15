@@ -806,7 +806,7 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 	}
 	pDevice->SetObject(pImage,pComm,pLog);
 
-	if (!pComm->m_bEmmc)    //chad.ma Emmc flash don't create UUID.
+	if (!pComm->RKU_IsEmmcFlash())    //chad.ma if is Emmc flash don't create UUID.
 	{
 		if (CreateUid(uid))
 		{

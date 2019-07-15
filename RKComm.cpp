@@ -165,6 +165,10 @@ int CRKUsbComm::RKU_ShowNandLBADevice()
 	return iRet;
 }
 
+bool CRKUsbComm::RKU_IsEmmcFlash()
+{
+    return m_bEmmc ? true : false;
+}
 
 CRKUsbComm::~CRKUsbComm()
 {

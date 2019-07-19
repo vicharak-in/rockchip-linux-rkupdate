@@ -1045,17 +1045,18 @@ int CRKAndroidDevice::DownloadImage()
 		else
 		{
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
-				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
+				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0 ||
+				strcmp(rkImageHead.item[i].name, PARTNAME_USERDATA) == 0)
 			{
 				if (!sdBootUpdate) {
 					//not sdboot update image, we will ignore download partiton.
-					//chad.ma add for ignore 'recovery' or 'misc' partition update at here.
-					m_pLog->Record(_T("\n######Ignore %s download ######\n"), rkImageHead.item[i].name);
+					//chad.ma add for ignore 'recovery' or 'misc' or 'userdata' partition update at here.
+					m_pLog->Record(_T(" INFO:##  Ignore [ %s ] download  ##\n"), rkImageHead.item[i].name);
 					continue;
 				}
 			}
 
-			m_pLog->Record(_T("###### Download %s ... #######"),rkImageHead.item[i].name);
+			m_pLog->Record(_T(" INFO:###### Download %s ... #######"),rkImageHead.item[i].name);
 
 			if (rkImageHead.item[i].file[55]=='H')
 			{
@@ -1130,17 +1131,17 @@ int CRKAndroidDevice::DownloadImage()
 					return -6;
 				}
 			}
-
 		}
 		else
 		{
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
-				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0)
+				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0 ||
+				strcmp(rkImageHead.item[i].name, PARTNAME_USERDATA) == 0)
 			{
 				if (!sdBootUpdate) {
 					//not sdboot update image , we will ignore check partiton.
-					//chad.ma add for ignore 'recovery' or 'misc' partition check at here.
-					m_pLog->Record(_T("\n###### Ignore %s Check ######\n"), rkImageHead.item[i].name);
+					//chad.ma add for ignore 'recovery' or 'misc' or 'userdata' partition check at here.
+					m_pLog->Record(_T(" INFO:#  Ignore [ %s ] Check  #\n"), rkImageHead.item[i].name);
 					continue;
 				}
 			}
@@ -1753,7 +1754,7 @@ bool CRKAndroidDevice::RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &c
 		uifileBufferSize = entry.size;
 	if (m_pLog)
 	{
-		m_pLog->Record(_T("INFO:Start to download %s,offset=0x%x,size=%llu"),entry.name,entry.flash_offset,uifileBufferSize);
+		m_pLog->Record(_T("INFO:Start updating [ %s ],offset=0x%x,size=%llu"),entry.name,entry.flash_offset,uifileBufferSize);
 	}
 
 	BYTE byRWMethod=RWMETHOD_IMAGE;
@@ -1895,6 +1896,11 @@ bool CRKAndroidDevice::RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &c
 	}
 	delete []pBuffer;
 	pBuffer = NULL;
+
+	if (m_pLog)
+	{
+		m_pLog->Record(_T("INFO:[ %s ] upgrade Done!"),entry.name);
+	}
 	return true;
 }
 

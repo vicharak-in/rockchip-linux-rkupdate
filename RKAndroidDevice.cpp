@@ -1,5 +1,9 @@
 #include "RKAndroidDevice.h"
 #define tole(x)		(x)
+#define look_for_userdata(name)	\
+	memcmp(name, PARTNAME_USERDATA, sizeof(PARTNAME_USERDATA) - 1)
+
+
 /*factor is 0xedb88320*/
 bool CRKAndroidDevice::bGptFlag = 0;
 extern int sdBootUpdate;
@@ -924,7 +928,7 @@ int CRKAndroidDevice::DownloadImage()
 				{
 					bFoundSystem = true;
 				}
-				if (strcmp(rkImageHead.item[i].name,PARTNAME_USERDATA)==0)
+				if (look_for_userdata(rkImageHead.item[i].name)==0)
 				{
 					bFoundUserData = true;
 				}
@@ -1046,7 +1050,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
 				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0 ||
-				strcmp(rkImageHead.item[i].name, PARTNAME_USERDATA) == 0)
+				look_for_userdata(rkImageHead.item[i].name) == 0)
 			{
 				if (!sdBootUpdate) {
 					//not sdboot update image, we will ignore download partiton.
@@ -1136,7 +1140,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (strcmp(rkImageHead.item[i].name, PARTNAME_RECOVERY) == 0 ||
 				strcmp(rkImageHead.item[i].name, PARTNAME_MISC) == 0 ||
-				strcmp(rkImageHead.item[i].name, PARTNAME_USERDATA) == 0)
+				look_for_userdata(rkImageHead.item[i].name) == 0)
 			{
 				if (!sdBootUpdate) {
 					//not sdboot update image , we will ignore check partiton.
@@ -1296,7 +1300,7 @@ int CRKAndroidDevice::UpgradePartition()
 				{
 					dwFlagSector = rkImageHead.item[i].flash_offset + rkImageHead.item[i].part_size -4;
 				}
-				if (strcmp(rkImageHead.item[i].name,PARTNAME_USERDATA)==0)
+				if (look_for_userdata(rkImageHead.item[i].name)==0)
 				{
 					bFoundUserData = true;
 				}

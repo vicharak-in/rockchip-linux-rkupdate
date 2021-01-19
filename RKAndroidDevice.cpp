@@ -179,7 +179,25 @@ bool CRKAndroidDevice::CalcIDBCount()
 		}
 		return false;
 	}
-	uiIdSectorNum = 4 + m_usFlashDataSec + m_usFlashBootSec;
+	if (m_pImage->m_bootObject->IsNewIDBFlag())
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("INFO:CalcIDBCount IsNewIDBFlag is true"));
+		}
+		bRet = GetLoaderHeadSize();
+		if (!bRet)
+		{
+			if (m_pLog)
+			{
+				m_pLog->Record(_T("ERROR:CalcIDBCount-->GetLoaderHeadSize failed"));
+			}
+			return false;
+		}
+		uiIdSectorNum = m_usFlashHeadSec + m_usFlashDataSec + m_usFlashBootSec;
+	} else {
+		uiIdSectorNum = 4 + m_usFlashDataSec + m_usFlashBootSec;
+	}
 
 	m_flashInfo.uiSecNumPerIDB = uiIdSectorNum;
 	m_flashInfo.usPhyBlokcPerIDB = CALC_UNIT(uiIdSectorNum,m_flashInfo.usValidSecPerBlock);
@@ -251,6 +269,29 @@ bool CRKAndroidDevice::GetLoaderDataSize()
 	return bRet;
 }
 
+bool CRKAndroidDevice::GetLoaderHeadSize()
+{
+	if (!m_pImage)
+	{
+		return false;
+	}
+	char index;
+	bool bRet;
+	tchar loaderName[]=_T("FlashHead");
+	index = m_pImage->m_bootObject->GetIndexByName(ENTRYLOADER,loaderName);
+	if (index==-1)
+	{
+		return false;
+	}
+	DWORD dwDelay;
+	bRet = m_pImage->m_bootObject->GetEntryProperty(ENTRYLOADER,index,m_dwLoaderHeadSize,dwDelay);
+	if (bRet)
+	{
+		m_usFlashHeadSec = PAGEALIGN(BYTE2SECTOR(m_dwLoaderHeadSize))*4;
+	}
+	return bRet;
+}
+
 CRKAndroidDevice::CRKAndroidDevice(STRUCT_RKDEVICE_DESC &device):CRKDevice(device)
 {
 	m_oldSec0 = NULL;
@@ -259,9 +300,11 @@ CRKAndroidDevice::CRKAndroidDevice(STRUCT_RKDEVICE_DESC &device):CRKDevice(devic
 	m_oldSec3 = NULL;
 	m_dwLoaderSize = 0;
 	m_dwLoaderDataSize = 0;
+	m_dwLoaderHeadSize = 0;
 	m_oldIDBCounts = 0;
 	m_usFlashBootSec = 0;
 	m_usFlashDataSec = 0;
+	m_usFlashHeadSec = 0;
 	m_dwBackupOffset = 0xFFFFFFFF;
 	m_paramBuffer = NULL;
 	m_pCallback = NULL;
@@ -627,6 +670,130 @@ int CRKAndroidDevice::MakeIDBlockData(PBYTE lpIDBlock)
 	return 0;
 }
 
+int CRKAndroidDevice::MakeNewIDBlockData(PBYTE lpIDBlock)
+{
+	int i;
+
+	if (m_pLog)
+	{
+		m_pLog->Record(_T("INFO:MakeNewIDBlockData in"));
+	}
+
+	if (!m_pImage)
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Image is invalid"));
+		}
+		return -1;
+	}
+	char index;
+	tchar loaderCodeName[]=_T("FlashBoot");
+	index = m_pImage->m_bootObject->GetIndexByName(ENTRYLOADER,loaderCodeName);
+	if (index==-1)
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderCode Entry failed"));
+		}
+		return -2;
+	}
+	PBYTE loaderCodeBuffer;
+	loaderCodeBuffer = new BYTE[m_dwLoaderSize];
+	memset(loaderCodeBuffer,0,m_dwLoaderSize);
+	if ( !m_pImage->m_bootObject->GetEntryData(ENTRYLOADER,index,loaderCodeBuffer) )
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderCode Data failed"));
+		}
+		delete []loaderCodeBuffer;
+		return -3;
+	}
+
+	tchar loaderDataName[]=_T("FlashData");
+	index = m_pImage->m_bootObject->GetIndexByName(ENTRYLOADER,loaderDataName);
+	if (index==-1)
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderData Entry failed"));
+		}
+		delete []loaderCodeBuffer;
+		return -4;
+	}
+	PBYTE loaderDataBuffer;
+	loaderDataBuffer = new BYTE[m_dwLoaderDataSize];
+	memset(loaderDataBuffer,0,m_dwLoaderDataSize);
+	if ( !m_pImage->m_bootObject->GetEntryData(ENTRYLOADER,index,loaderDataBuffer) )
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderData Data failed"));
+		}
+		delete []loaderDataBuffer;
+		delete []loaderCodeBuffer;
+		return -5;
+	}
+
+	tchar loaderHeadName[]=_T("FlashHead");
+	index = m_pImage->m_bootObject->GetIndexByName(ENTRYLOADER,loaderHeadName);
+	if (index==-1)
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderHead Entry failed"));
+		}
+		delete []loaderDataBuffer;
+		delete []loaderCodeBuffer;
+		return -6;
+	}
+	PBYTE loaderHeadBuffer;
+	loaderHeadBuffer = new BYTE[m_dwLoaderHeadSize];
+	memset(loaderHeadBuffer,0,m_dwLoaderHeadSize);
+	if ( !m_pImage->m_bootObject->GetEntryData(ENTRYLOADER,index,loaderHeadBuffer) )
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:MakeNewIDBlockData-->Get LoaderHead Data failed"));
+		}
+		delete []loaderDataBuffer;
+		delete []loaderCodeBuffer;
+		delete []loaderHeadBuffer;
+		return -7;
+	}
+
+	if (m_pImage->m_bootObject->Rc4DisableFlag)
+	{//close rc4 encryption
+		for (i=0;i<m_dwLoaderHeadSize/SECTOR_SIZE;i++)
+		{
+			P_RC4(loaderHeadBuffer+SECTOR_SIZE*i,SECTOR_SIZE);
+		}
+		for (i=0;i<m_dwLoaderDataSize/SECTOR_SIZE;i++)
+		{
+			P_RC4(loaderDataBuffer+SECTOR_SIZE*i,SECTOR_SIZE);
+		}
+		for (i=0;i<m_dwLoaderSize/SECTOR_SIZE;i++)
+		{
+			P_RC4(loaderCodeBuffer+SECTOR_SIZE*i,SECTOR_SIZE);
+		}
+	}
+	memcpy(lpIDBlock, loaderHeadBuffer, m_dwLoaderHeadSize);
+	memcpy(lpIDBlock+SECTOR_SIZE*m_usFlashHeadSec, loaderDataBuffer, m_dwLoaderDataSize);
+	memcpy(lpIDBlock+SECTOR_SIZE*(m_usFlashHeadSec+m_usFlashDataSec), loaderCodeBuffer, m_dwLoaderSize);
+
+
+	delete []loaderDataBuffer;
+	delete []loaderCodeBuffer;
+	delete []loaderHeadBuffer;
+
+	if (m_pLog)
+	{
+		m_pLog->Record(_T("INFO:MakeNewIDBlockData out"));
+	}
+	return 0;
+}
+
 bool CRKAndroidDevice::MakeSpareData(PBYTE lpIDBlock,DWORD dwSectorNum,PBYTE lpSpareBuffer)
 {
 	int i = 0;
@@ -851,7 +1018,19 @@ int CRKAndroidDevice::DownloadIDBlock()
 	int iRet=0;
 	memset(pIDBData,0,dwSectorNum*SECTOR_SIZE);
 
-	iRet = MakeIDBlockData(pIDBData);
+	// iRet = MakeIDBlockData(pIDBData);
+	if (m_pImage->m_bootObject->IsNewIDBFlag())
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("INFO:DownloadIDBlock-->IsNewIDBFlag is true"),iRet);
+		}
+		iRet = MakeNewIDBlockData(pIDBData);
+	}
+	else {
+		iRet = MakeIDBlockData(pIDBData);
+	}
+
 	if ( iRet!=0 )
 	{
 		if (m_pLog)

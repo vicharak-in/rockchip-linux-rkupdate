@@ -111,12 +111,12 @@ bool CRKImage::SaveFWFile(tstring filename)
 	}
 	BYTE buffer[1024];
 	DWORD dwBufferSize=1024;
-	long long dwFWSize=m_fwSize;
+	long long dwFWSize = m_fwSize;
 	DWORD dwReadSize;
 	fseeko(m_pFile,m_fwOffset,SEEK_SET);
 	do
 	{
-		dwReadSize = (dwFWSize>=1024)?dwBufferSize:dwFWSize;
+		dwReadSize = (dwFWSize>=1024)? dwBufferSize:dwFWSize;
 		fread(buffer,1,dwReadSize,m_pFile);
 		fwrite(buffer,1,dwReadSize,file);
 		dwFWSize -= dwReadSize;
@@ -124,6 +124,7 @@ bool CRKImage::SaveFWFile(tstring filename)
 	fclose(file);
 	return true;
 }
+
 bool CRKImage::GetData(long long dwOffset,DWORD dwSize,PBYTE lpBuffer)
 {
 	if ( dwOffset<0 || dwSize==0 )
@@ -225,15 +226,16 @@ CRKImage::CRKImage(tstring filename,bool &bCheck)
 		}
 #endif
 	}
-//code will be error if firmware is signed.md5 is not last 32 byte.
-//	fseeko(m_pFile,-32,SEEK_END);
-//	fread(m_md5,1,32,m_pFile);
-//	fseeko(m_pFile,0,SEEK_SET);
-// 	if (!Md5Check())
-// 	{
-// 		bCheck = false;
-// 		return;
-// 	}
+
+	//code will be error if firmware is signed.md5 is not last 32 byte.
+	//	fseeko(m_pFile,-32,SEEK_END);
+	//	fread(m_md5,1,32,m_pFile);
+	//	fseeko(m_pFile,0,SEEK_SET);
+	// 	if (!Md5Check())
+	// 	{
+	// 		bCheck = false;
+	// 		return;
+	// 	}
 
 	int nMd5DataSize;
 	long long ulFwSize;

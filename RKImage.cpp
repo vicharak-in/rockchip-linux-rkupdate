@@ -1,6 +1,9 @@
 #include "RKImage.h"
 #include "MD5Checksum.h"
 
+extern int IsRK3308_Plateform();
+extern int Compatible_rk3308bs_loader();
+
 DWORD CRKImage::GetVersion()
 {
 	return m_version;
@@ -45,6 +48,12 @@ long long CRKImage::GetFWSize()
 {
 	return m_fwSize;
 }
+
+FILE* CRKImage::GetFWFileHandle()
+{
+	return m_pFile;
+}
+
 bool CRKImage::Md5Check(long long nCheckSize)
 {
 	printf("In Md5Check\n");
@@ -76,8 +85,8 @@ bool CRKImage::Md5Check(long long nCheckSize)
 	}
 	else
 		return false;
-
 }
+
 bool CRKImage::SaveBootFile(tstring filename)
 {
 	FILE *file=NULL;
@@ -216,7 +225,7 @@ CRKImage::CRKImage(tstring filename,bool &bCheck)
 	{
 		bCheck = false;
 		printf("CRKImage : fopen <%s> fail,will try use fopen64 \n", szName);
-#if 1
+
 		m_pFile=  fopen64(szName, "rb");
 		if (!m_pFile)
 		{
@@ -224,7 +233,6 @@ CRKImage::CRKImage(tstring filename,bool &bCheck)
 			printf("CRKImage : fopen64 <%s> fail\n", szName);
 			return;
 		}
-#endif
 	}
 
 	//code will be error if firmware is signed.md5 is not last 32 byte.
@@ -306,7 +314,6 @@ CRKImage::CRKImage(tstring filename,bool &bCheck)
 		m_bootOffset = 0;
 		m_bootSize = m_fileSize;
 	}
-
 
 	PBYTE lpBoot;
 	lpBoot = new BYTE[m_bootSize];

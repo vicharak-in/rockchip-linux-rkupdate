@@ -790,7 +790,6 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 	BYTE uid[RKDEVICE_UID_LEN];
 	tstring strFw = szFw;
 	tstring strUid;
-	bool bExistBootloader = true;
 	bool bUpdateLoader = true;
 
 	g_callback = (UpgradeCallbackFunc)pCallback;
@@ -843,43 +842,69 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		goto EXIT_UPGRADE;
 	}
 
-	bExistBootloader = pDevice->IsExistBootloaderInFw();
+	bUpdateLoader = pDevice->IsExistBootloaderInFw();
 
-	if (bExistBootloader)
+	if (IsRK3308_Plateform() && Compatible_rk3308bs_loader())
 	{
-		if (IsRK3308_Plateform() && !Compatible_rk3308bs_loader())	// is 3308 plateform and compatibale with rk3308bs/rk3308b
+		bool bFound_3308bs_loader = false;
+		const char* rk3308bs_loader = "rk3308bs_loader";
+		DWORD rk3308bs_loaderOffset = 0;
+		DWORD rk3308bs_loaderSize   = 0;
+
+		bUpdateLoader = false;
+		if (pDevice->IsExistPartitonInFw(rk3308bs_loader, rk3308bs_loaderOffset,rk3308bs_loaderSize))
 		{
-			bUpdateLoader = false;
+			printf("Found RK3308bs loader in fw and offset :%d size :%d.\n",rk3308bs_loaderOffset,rk3308bs_loaderSize);
+
+			if (pImage->m_bootObject)
+			{
+				delete pImage->m_bootObject;
+
+				bool bRet;
+				PBYTE lpBoot;
+				lpBoot = new BYTE[rk3308bs_loaderSize];
+
+				long offset = rk3308bs_loaderOffset + pImage->GetFWOffset();
+				fseeko64(pImage->GetFWFileHandle(),offset,SEEK_SET);
+				fread(lpBoot,1,rk3308bs_loaderSize,pImage->GetFWFileHandle());
+				pImage->m_bootObject = new CRKBoot(lpBoot,rk3308bs_loaderSize, bRet);
+				if (!bRet)
+				{
+					printf("CRKImage :Error! new CRKBoot fail!\n");
+					return false;
+				}
+				bUpdateLoader = true;
+			}
 		}
+	}
 
-		if (bUpdateLoader)
+	if (bUpdateLoader)
+	{
+		printf("############### update boatloader start ############\n");
+
+		pLog->Record("IDBlock Preparing...");
+		printf("\t\t ############### IDBlock Preparing...\n");
+		iRet = pDevice->PrepareIDB();
+		if (iRet!=ERR_SUCCESS)
 		{
-			printf("############### update boatloader start ############\n");
+			pLog->Record("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed!");
+			goto EXIT_UPGRADE;
+		}
+		pLog->Record("IDBlock Writing...");
+		printf("\t\t ############### IDBlock Writing...\n");
+		iRet = pDevice->DownloadIDBlock();
+		if (iRet!=ERR_SUCCESS)
+		{
+			pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed!");
+			goto EXIT_UPGRADE;
+		}
+		printf("############### update boatloader Suceess############\n");
 
-			pLog->Record("IDBlock Preparing...");
-			printf("\t\t ############### IDBlock Preparing...\n");
-			iRet = pDevice->PrepareIDB();
-			if (iRet!=ERR_SUCCESS)
-			{
-				pLog->Record("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed!");
-				goto EXIT_UPGRADE;
-			}
-			pLog->Record("IDBlock Writing...");
-			printf("\t\t ############### IDBlock Writing...\n");
-			iRet = pDevice->DownloadIDBlock();
-			if (iRet!=ERR_SUCCESS)
-			{
-				pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed!");
-				goto EXIT_UPGRADE;
-			}
-			printf("############### update boatloader Suceess############\n");
-
-			if (strFw.find(_T(".bin"))!=tstring::npos)
-			{
-				pLog->Record("INFO:do_rk_firmware_upgrade-->Download loader only success!");
-				bSuccess = true;
-				return bSuccess;
-			}
+		if (strFw.find(_T(".bin"))!=tstring::npos)
+		{
+			pLog->Record("INFO:do_rk_firmware_upgrade-->Download loader only success!");
+			bSuccess = true;
+			return bSuccess;
 		}
 	}
 

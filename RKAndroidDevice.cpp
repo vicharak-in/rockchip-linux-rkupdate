@@ -860,8 +860,7 @@ int CRKAndroidDevice::WriteIDBlock(PBYTE lpIDBlock,DWORD dwSectorNum,bool bErase
 	return 0;
 }
 
-int CRKAndroidDevice::
-	PrepareIDB()
+int CRKAndroidDevice::PrepareIDB()
 {
 	int i;
 	generate_gf();
@@ -1056,6 +1055,49 @@ int CRKAndroidDevice::DownloadIDBlock()
 		//BufferWriteBack();
 		return -3;
 	}
+}
+
+bool CRKAndroidDevice::IsExistPartitonInFw(const char* partName, UINT &offset, UINT &size)
+{
+	bool bRet;
+	long long dwFwOffset;
+	bool  bFound = false;
+	STRUCT_RKIMAGE_HDR rkImageHead;
+	int iHeadSize;
+
+	dwFwOffset = m_pImage->FWOffset;
+	iHeadSize = sizeof(STRUCT_RKIMAGE_HDR);
+
+	bRet = m_pImage->GetData(dwFwOffset,iHeadSize,(PBYTE)&rkImageHead);
+	if (!bRet) return false;
+	if (rkImageHead.item_count<=0) return false;
+
+	/* get partiton size and offset in fw data to buffer */
+	long long partitonSize;
+	long long partitonOffset;
+
+	for (int i = 0; i < rkImageHead.item_count; i++)
+	{
+		if (strncmp(rkImageHead.item[i].name, partName, strlen(partName)) != 0)
+			continue;
+
+		if (rkImageHead.item[i].file[55] == 'H') {
+			partitonSize = *((DWORD *)(&rkImageHead.item[i].file[56]));
+			partitonSize <<= 32;
+			partitonSize += rkImageHead.item[i].size;
+		} else {
+			partitonSize = rkImageHead.item[i].size;
+		}
+
+		partitonOffset = rkImageHead.item[i].offset;
+		offset		   = (UINT)partitonOffset;
+		size		   = (UINT)partitonSize;
+		bFound = true;
+
+		break;
+	}
+
+	return bFound;
 }
 
 bool CRKAndroidDevice::IsExistBootloaderInFw()

@@ -186,6 +186,7 @@ public:
 	int UpgradePartition();
 	bool GetPublicKey(unsigned char *pKey,unsigned int &nKeySize);
 	bool IsExistBootloaderInFw();
+	bool IsExistPartitonInFw(const char* partName, UINT &offset, UINT &size);
 	UpgradeCallbackFunc m_pCallback;
 	UpgradeProgressCallbackFunc m_pProcessCallback;
 protected:

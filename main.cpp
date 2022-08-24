@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "Upgrade.h"
+#include <fcntl.h>
+#include <string.h>
 
 enum { INSTALL_SUCCESS, INSTALL_ERROR, INSTALL_CORRUPT };
 
@@ -34,9 +36,28 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "unexpected number of arguments (%d)\n", argc);
         return 1;
     }
-    int fd = atoi(argv[2]);
-    cmd_pipe = fdopen(fd, "wb");
-    setlinebuf(cmd_pipe);
+
+    if (strcmp(argv[2], "NULL") != 0)
+    {
+        int fd = atoi(argv[2]);
+        if (fd == 0)
+        {
+            cmd_pipe = fopen(argv[2], "r+");
+            if (cmd_pipe != NULL)
+                printf("open %s as cmd_pipe successed\n", argv[2]);
+            else
+                printf("open %s as cmd_pipe failed\n", argv[2]);
+        }
+        else
+        {
+            cmd_pipe = fdopen(fd, "wb");
+            if (cmd_pipe != NULL)
+                printf("open fd: %s successed\n", argv[2]);
+            else
+                printf("open fd: %s failed\n", argv[2]);
+        }
+        setlinebuf(cmd_pipe);
+    }
 
     char* filepath = argv[3];
     sdBootUpdate = atoi(argv[4]);

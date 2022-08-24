@@ -196,7 +196,7 @@ bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem)
 			continue;
 		}
 		strPartition = strLine.substr(posColon+1);
-		//提取分区信息
+		//锟斤拷取锟斤拷锟斤拷锟斤拷息
 		pos = 0;
 		posComma = strPartition.find(',',pos);
 		while (posComma!=string::npos)
@@ -251,7 +251,7 @@ bool get_parameter_loader( CRKComm *pComm,char *pParameter, int &nParamSize)
 		return false;
 	}
 	if (nParamSize==-1)
-	{//获取parameter大小
+	{//锟斤拷取parameter锟斤拷小
 		nParamSize = *pParamSize;
 		return true;
 	}

@@ -95,7 +95,7 @@ CHAR CRKAndroidDevice::FindIDBlock(char pos,char &IDBlockPos)
 			{
 				m_pLog->Record(_T("ERROR:FindIDBlock-->RKU_ReadSector %x failed,RetCode(%d)"),i*m_flashInfo.uiSectorPerBlock,iRet);
 			}
-			return -1;//Êı¾İ¶ÁÈ¡Ê§°Ü
+			return -1;//æ•°æ®è¯»å–å¤±è´¥
 		}
 		RKANDROID_IDB_SEC0 *pSec0;
 		pSec0 = (RKANDROID_IDB_SEC0 *)bData;
@@ -103,17 +103,17 @@ CHAR CRKAndroidDevice::FindIDBlock(char pos,char &IDBlockPos)
  //       if (bData[514]==0x69)//0x69='i'
 		if (pSec0->dwTag==0x0FF0AA55)
 		{
-			//Ôö¼ÓÅĞ¶Ïtag
+			//å¢åŠ åˆ¤æ–­tag
 			RKANDROID_IDB_SEC1 *pSec;
 			pSec = (RKANDROID_IDB_SEC1 *)(bData+SECTOR_SIZE);
 			if (pSec->uiChipTag==0x38324B52)
 			{
 				IDBlockPos = i;
-				return 0;//ÕÒµ½idb
+				return 0;//æ‰¾åˆ°idb
 			}
 			else
 			{
-				continue;//tag²»¶Ô
+				continue;//tagä¸å¯¹
 			}
 		}
 
@@ -159,7 +159,7 @@ bool CRKAndroidDevice::ReserveIDBlock(char iBlockIndex,char iIdblockPos)
 bool CRKAndroidDevice::CalcIDBCount()
 {
 	bool bRet;
-	UINT uiIdSectorNum;//ID BLOCK»ù±¾Çø
+	UINT uiIdSectorNum;//ID BLOCKåŸºæœ¬åŒº
 
 	bRet = GetLoaderSize();
 	if (!bRet)
@@ -208,7 +208,7 @@ bool CRKAndroidDevice::OffsetIDBlock(char pos)
 	int iBlockIndex,i;
 	for ( i=0;i<m_flashInfo.usPhyBlokcPerIDB;i++)
 	{
-		m_flashInfo.blockState[m_idBlockOffset[pos]+i]=1;//±ê¼ÇÉÏ»µ¿é
+		m_flashInfo.blockState[m_idBlockOffset[pos]+i]=1;//æ ‡è®°ä¸Šåå—
 	}
 	iBlockIndex = m_idBlockOffset[pos]+m_flashInfo.usPhyBlokcPerIDB;
 	for(i=pos; i<5; i++)
@@ -353,7 +353,7 @@ bool CRKAndroidDevice::GetOldSectorData()
 		{
 			m_pLog->Record(_T("ERROR:GetOldSectorData-->GetWriteBackData failed"));
 		}
-		return false;//Êı¾İ¶ÁÈ¡Ê§°Ü
+		return false;//æ•°æ®è¯»å–å¤±è´¥
 	}
 	PBYTE pSec;
 	if (!m_oldSec0)
@@ -602,7 +602,7 @@ int CRKAndroidDevice::MakeIDBlockData(PBYTE lpIDBlock)
 		return -5;
 	}
 
-	////////////// Éú³ÉÊı¾İ ////////////////////////////////////////////
+	////////////// ç”Ÿæˆæ•°æ® ////////////////////////////////////////////
 	UINT i;
 	MakeSector0((PBYTE)&sector0Info);
 	MakeSector1((PBYTE)&sector1Info);
@@ -806,8 +806,8 @@ bool CRKAndroidDevice::MakeSpareData(PBYTE lpIDBlock,DWORD dwSectorNum,PBYTE lpS
 		bchInBuf[514] = ((i==0) ? 'i' : 0xff);
 		bchInBuf[512] = 0xff;
 		bchInBuf[513] = 0xff;
-		//¶ÔbchInBuf½øĞĞBCH±àÂë£¨Éú³É13¸ö×Ö½ÚµÄ±àÂë£©£¬Éú³ÉµÄbchOutBuf(528 Bytes)
-		//ÓÉbchInBuf(515 Bytes)ÓëBCH±àÂë(13 Bytes)×é³É
+		//å¯¹bchInBufè¿›è¡ŒBCHç¼–ç ï¼ˆç”Ÿæˆ13ä¸ªå­—èŠ‚çš„ç¼–ç ï¼‰ï¼Œç”Ÿæˆçš„bchOutBuf(528 Bytes)
+		//ç”±bchInBuf(515 Bytes)ä¸BCHç¼–ç (13 Bytes)ç»„æˆ
 		bch_encode(bchInBuf, bchOutBuf);
 		memcpy(lpSpareBuffer+i*16+3, bchOutBuf+515, 13);
 	}
@@ -1699,7 +1699,7 @@ int CRKAndroidDevice::UpgradePartition()
 		}
 		return -13;
 	}
-	uiTotalSize += (8*m_uiParamFileSize);//¼ÓÉÏ²ÎÊıÎÄ¼şĞèÒªµÄ´óĞ¡
+	uiTotalSize += (8*m_uiParamFileSize);//åŠ ä¸Šå‚æ•°æ–‡ä»¶éœ€è¦çš„å¤§å°
 	m_uiLBATimes = 1;
 	m_pImage->GetMd5Data(fwMd5,fwSignMd5);
 	if (dwFlagSector!=0)
@@ -2440,7 +2440,7 @@ bool CRKAndroidDevice::RKA_File_Check(STRUCT_RKIMAGE_ITEM &entry,long long &curr
 }
 
 bool CRKAndroidDevice::RKA_Param_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte)
-{//Ğ´5·İ²ÎÊıÎÄ¼ş
+{//å†™5ä»½å‚æ•°æ–‡ä»¶
 	UINT uiLBATransferSize=(LBA_TRANSFER_SIZE)*m_uiLBATimes;
 	UINT uiLBASector = uiLBATransferSize/SECTOR_SIZE;
 	int  iRet,i;
@@ -2482,7 +2482,7 @@ bool CRKAndroidDevice::RKA_Param_Download(STRUCT_RKIMAGE_ITEM &entry,long long &
 				uiWriteByte = uiLBATransferSize;
 				uiLen = uiLBASector;
 			}
-			iRet = m_pComm->RKU_WriteLBA(uiBegin,uiLen,m_paramBuffer+uiTransfer,byRWMethod);//Ã¿´Î¶¼ÒªĞ´32ÉÈÇø,°´page¶ÔÆë
+			iRet = m_pComm->RKU_WriteLBA(uiBegin,uiLen,m_paramBuffer+uiTransfer,byRWMethod);//æ¯æ¬¡éƒ½è¦å†™32æ‰‡åŒº,æŒ‰pageå¯¹é½
 			if( iRet!=ERR_SUCCESS )
 			{
 				if (m_pLog)
@@ -2819,7 +2819,7 @@ bool CRKAndroidDevice::MakeParamFileBuffer(STRUCT_RKIMAGE_ITEM &entry)
 		pBuffer = NULL;
 		return false;
 	}
-	//ÅĞ¶ÏÊÇ·ñÒªĞŞ¸ÄParamterÎÄ¼şÄÚÈİ,ÊÖ»úÉı¼¶ĞèÒª½«paramterÎÄ¼şÖĞµÄpartition²¿·ÖÊı¾İ¸Ä³ÉÒÔ×Ö½ÚÎªµ¥Î»½øĞĞÆ«ÒÆ
+	//åˆ¤æ–­æ˜¯å¦è¦ä¿®æ”¹Paramteræ–‡ä»¶å†…å®¹,æ‰‹æœºå‡çº§éœ€è¦å°†paramteræ–‡ä»¶ä¸­çš„partitionéƒ¨åˆ†æ•°æ®æ”¹æˆä»¥å­—èŠ‚ä¸ºå•ä½è¿›è¡Œåç§»
 
 	UINT uiParamSec;
 	if (m_uiParamFileSize%512==0)
@@ -2868,7 +2868,7 @@ bool CRKAndroidDevice::CheckParamPartSize(STRUCT_RKIMAGE_HDR &rkImageHead,int iP
 	{
 		return false;
 	}
-	if (m_uiParamFileSize>rkImageHead.item[iParamPos].part_size/8*512)//ÊÇ·ñÂú×ã´æ·Å8·İ
+	if (m_uiParamFileSize>rkImageHead.item[iParamPos].part_size/8*512)//æ˜¯å¦æ»¡è¶³å­˜æ”¾8ä»½
 	{
 		return false;
 	}
@@ -3001,7 +3001,7 @@ bool CRKAndroidDevice::GetParameterPartSize(STRUCT_RKIMAGE_ITEM &paramItem)
 			continue;
 		}
 		strPartition = strLine.substr(posColon+1);
-		//ÌáÈ¡·ÖÇøĞÅÏ¢
+		//æå–åˆ†åŒºä¿¡æ¯
 		pos = 0;
 		posComma = strPartition.find(',',pos);
 		while (posComma!=string::npos)
